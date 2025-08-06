@@ -3,11 +3,13 @@ import { ref, onMounted } from 'vue'
 import { GetDiariesList, GetDiaryByID } from '../wailsjs/go/main/App'
 import DiaryList from './components/DiaryList.vue'
 import DiaryViewer from './components/DiaryViewer.vue'
+import DiaryEditor from './components/DiaryEditor.vue'
 
 const currentView = ref('list')
 const diaries = ref([])
 const selectedDiary = ref(null)
 const loading = ref(false)
+const editingDiary = ref(null)
 
 onMounted(async () => {
   await loadDiaries()
@@ -44,6 +46,31 @@ const handleViewDiary = async (diary) => {
 const showListView = () => {
   currentView.value = 'list'
   selectedDiary.value = null
+  editingDiary.value = null
+}
+
+const handleCreateDiary = () => {
+  editingDiary.value = {
+    id: '',
+    title: '',
+    content: '',
+    tags: []
+  }
+  currentView.value = 'editor'
+}
+
+// handleEditDiary 函数已移除，因为编辑功能现在集成在 DiaryViewer 中
+
+const handleDiarySaved = async () => {
+  await loadDiaries()
+  showListView()
+}
+
+const handleDiaryUpdated = async (updatedDiary) => {
+  // 更新选中的日记数据
+  selectedDiary.value = updatedDiary
+  // 重新加载日记列表以保持同步
+  await loadDiaries()
 }
 
 // 窗口控制函数
@@ -67,7 +94,7 @@ const closeWindow = () => {
       <div class="titlebar-content">
         <div class="app-info">
           <h1 class="app-title">MoodStack</h1>
-          <span class="app-subtitle">心情记录</span>
+          <span class="app-subtitle">心栈</span>
         </div>
         
         <div class="window-controls">
@@ -97,7 +124,7 @@ const closeWindow = () => {
         <nav class="navigation">
           <button 
             @click="showListView" 
-            :class="['nav-item', { active: currentView === 'list' || currentView === 'viewer' }]"
+            :class="['nav-item', { active: currentView === 'list' || currentView === 'viewer' || currentView === 'editor' }]"
           >
             <span class="nav-text">我的日记</span>
           </button>
@@ -125,12 +152,21 @@ const closeWindow = () => {
           :diaries="diaries"
           @view-diary="handleViewDiary"
           @upload-success="handleUploadSuccess"
+          @create-diary="handleCreateDiary"
         />
         
         <DiaryViewer 
           v-else-if="currentView === 'viewer' && selectedDiary" 
           :diary="selectedDiary"
           @back="showListView"
+          @diary-updated="handleDiaryUpdated"
+        />
+        
+        <DiaryEditor
+          v-else-if="currentView === 'editor' && editingDiary"
+          :diary="editingDiary"
+          @back="showListView"
+          @diary-saved="handleDiarySaved"
         />
       </main>
     </div>
