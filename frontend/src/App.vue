@@ -147,27 +147,32 @@ const closeWindow = () => {
           <p class="loading-text">正在加载...</p>
         </div>
         
-        <DiaryList 
-          v-if="currentView === 'list'" 
-          :diaries="diaries"
-          @view-diary="handleViewDiary"
-          @upload-success="handleUploadSuccess"
-          @create-diary="handleCreateDiary"
-        />
-        
-        <DiaryViewer 
-          v-else-if="currentView === 'viewer' && selectedDiary" 
-          :diary="selectedDiary"
-          @back="showListView"
-          @diary-updated="handleDiaryUpdated"
-        />
-        
-        <DiaryEditor
-          v-else-if="currentView === 'editor' && editingDiary"
-          :diary="editingDiary"
-          @back="showListView"
-          @diary-saved="handleDiarySaved"
-        />
+        <Transition name="page" mode="out-in" appear>
+          <DiaryList 
+            v-if="currentView === 'list'" 
+            key="list"
+            :diaries="diaries"
+            @view-diary="handleViewDiary"
+            @upload-success="handleUploadSuccess"
+            @create-diary="handleCreateDiary"
+          />
+          
+          <DiaryViewer 
+            v-else-if="currentView === 'viewer' && selectedDiary" 
+            key="viewer"
+            :diary="selectedDiary"
+            @back="showListView"
+            @diary-updated="handleDiaryUpdated"
+          />
+          
+          <DiaryEditor
+            v-else-if="currentView === 'editor' && editingDiary"
+            key="editor"
+            :diary="editingDiary"
+            @back="showListView"
+            @diary-saved="handleDiarySaved"
+          />
+        </Transition>
       </main>
     </div>
   </div>
@@ -248,11 +253,17 @@ const closeWindow = () => {
 .control-btn:hover {
   background: var(--nord4);
   color: var(--text-secondary);
+  transform: scale(1.1);
 }
 
 .control-btn.close:hover {
   background: var(--accent-error);
   color: white;
+  transform: scale(1.1);
+}
+
+.control-btn:active {
+  transform: scale(0.95);
 }
 
 /* 主布局 */
@@ -301,12 +312,15 @@ const closeWindow = () => {
 .nav-item:hover {
   background: var(--nord5);
   color: var(--text-primary);
+  transform: translateX(4px);
 }
 
 .nav-item.active {
   background: var(--accent-primary);
   color: var(--nord0);
   font-weight: 600;
+  transform: translateX(6px);
+  box-shadow: var(--shadow-md);
 }
 
 .nav-text {
@@ -345,8 +359,10 @@ const closeWindow = () => {
 /* 主内容区域 */
 .content-area {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   background: var(--bg-primary);
+  position: relative;
+  perspective: 1000px;
 }
 
 /* 加载状态 */
@@ -356,27 +372,87 @@ const closeWindow = () => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 16px;
+  gap: 20px;
+  animation: fadeInScale 0.4s ease-out;
 }
 
 .loading-spinner {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: 3px solid var(--nord4);
   border-top: 3px solid var(--accent-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  filter: drop-shadow(0 2px 4px rgba(136, 192, 208, 0.2));
 }
 
 .loading-text {
   color: var(--text-muted);
   font-weight: 500;
+  font-size: 14px;
+  animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* 页面切换动画 */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.45s var(--ease-spring);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.page-enter-active {
+  transition-delay: 0.05s;
+  z-index: 2;
+}
+
+.page-leave-active {
+  z-index: 1;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.page-enter-to,
+.page-leave-from {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* 移动端动画优化 */
+@media (max-width: 768px) {
+  .page-enter-active,
+  .page-leave-active {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .page-enter-from {
+    transform: translateX(20px);
+  }
+  
+  .page-leave-to {
+    transform: translateX(-20px);
+  }
+}
+
+
 
 /* 响应式设计 */
 @media (max-width: 1024px) {
