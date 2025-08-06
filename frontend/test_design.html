@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodStack - 新设计预览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 自定义状态栏 */
+        .custom-titlebar {
+            height: 40px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            user-select: none;
+        }
+
+        .titlebar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-icon {
+            font-size: 20px;
+        }
+
+        .app-name {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 16px;
+        }
+
+        .titlebar-center {
+            flex: 1;
+            text-align: center;
+        }
+
+        .app-subtitle {
+            color: #718096;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .titlebar-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn.minimize {
+            background: #ffbd2e;
+        }
+
+        .control-btn.maximize {
+            background: #28ca42;
+        }
+
+        .control-btn.close {
+            background: #ff5f57;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* 主布局容器 */
+        .main-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 左侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-item {
+            width: 100%;
+            padding: 16px 24px;
+            background: transparent;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #4a5568;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.5);
+            color: #2d3748;
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border-right: 3px solid #667eea;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+        }
+
+        .nav-text {
+            font-weight: 500;
+        }
+
+        .sidebar-footer {
+            padding: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .diary-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .count-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .count-label {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        /* 右侧主内容区 */
+        .content-area {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .content-container {
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 示例卡片 */
+        .demo-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .demo-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+
+        .demo-text {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .demo-item {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .demo-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .demo-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        .demo-item:hover::before {
+            opacity: 1;
+        }
+
+        .demo-item-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .demo-item-content {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- 自定义状态栏 -->
+        <div class="custom-titlebar">
+            <div class="titlebar-left">
+                <div class="app-icon">📔</div>
+                <span class="app-name">MoodStack</span>
+            </div>
+            <div class="titlebar-center">
+                <span class="app-subtitle">你的心事，只让你和本地大模型知道</span>
+            </div>
+            <div class="titlebar-right">
+                <div class="window-controls">
+                    <div class="control-btn minimize"></div>
+                    <div class="control-btn maximize"></div>
+                    <div class="control-btn close"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主布局容器 -->
+        <div class="main-container">
+            <!-- 左侧边栏 -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h1 class="sidebar-title">📚 日记管理</h1>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <button class="nav-item active">
+                        <span class="nav-icon">📖</span>
+                        <span class="nav-text">日记列表</span>
+                    </button>
+                    <button class="nav-item">
+                        <span class="nav-icon">📝</span>
+                        <span class="nav-text">上传日记</span>
+                    </button>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <div class="diary-count">
+                        <span class="count-number">3</span>
+                        <span class="count-label">篇日记</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 右侧主内容区 -->
+            <main class="content-area">
+                <div class="content-container">
+                    <div class="demo-card">
+                        <h2 class="demo-title">🎨 新设计特性</h2>
+                        <p class="demo-text">
+                            全新的 MoodStack 界面采用了现代化的设计理念，包含以下特性：
+                        </p>
+                    </div>
+
+                    <div class="demo-grid">
+                        <div class="demo-item">
+                            <h3 class="demo-item-title">✨ 亚克力效果</h3>
+                            <p class="demo-item-content">
+                                使用 backdrop-filter 和透明度实现真实的亚克力玻璃效果，让界面更加现代化和美观。
+                            </p>
+                        </div>
+                        
+                        <div class="demo-item">
+                            <h3 class="demo-item-title">🎯 左右布局</h3>
+                            <p class="demo-item-content">
+                                采用左右分栏布局，左侧为导航和统计信息，右侧为主要内容区域，提升使用效率。
+                            </p>
+                        </div>
+                        
+                        <div class="demo-item">
+                            <h3 class="demo-item-title">🎨 温和配色</h3>
+                            <p class="demo-item-content">
+                                使用柔和的蓝灰色调，减少视觉疲劳，营造舒适的阅读和操作环境。
+                            </p>
+                        </div>
+                        
+                        <div class="demo-item">
+                            <h3 class="demo-item-title">🖥️ 自定义状态栏</h3>
+                            <p class="demo-item-content">
+                                完全自主设计的状态栏，包含应用图标、标题、副标题和窗口控制按钮。
+                            </p>
+                        </div>
+                        
+                        <div class="demo-item">
+                            <h3 class="demo-item-title">📱 响应式设计</h3>
+                            <p class="demo-item-content">
+                                适配不同屏幕尺寸，在移动设备上也能提供良好的用户体验。
+                            </p>
+                        </div>
+                        
+                        <div class="demo-item">
+                            <h3 class="demo-item-title">⚡ 流畅动画</h3>
+                            <p class="demo-item-content">
+                                精心设计的过渡动画和悬停效果，提升交互体验和视觉反馈。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html> 
