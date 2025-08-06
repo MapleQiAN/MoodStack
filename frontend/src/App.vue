@@ -470,7 +470,7 @@ const closeWindow = () => {
 /* 主内容区域 */
 .content-area {
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
   background: var(--bg-primary);
   position: relative;
   perspective: 1000px;

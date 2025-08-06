@@ -56,7 +56,6 @@
         </div>
       </div>
     </div>
-    </div>
     
     <!-- 查看模式 -->
     <div v-if="!isEditing" class="viewer-content">
@@ -533,7 +532,10 @@ onUnmounted(() => {
 .viewer-container {
   max-width: 100%;
   box-sizing: border-box;
-  min-height: 100vh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
 }
 
 .viewer-header {
@@ -541,10 +543,12 @@ onUnmounted(() => {
   top: 0;
   z-index: 1000;
   padding: 16px 32px;
-  background: var(--bg-glass);
+  background: rgba(236, 239, 244, 0.95);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--nord4);
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .header-top {
@@ -702,6 +706,8 @@ onUnmounted(() => {
 
 .viewer-content {
   padding: 32px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .article-container {
@@ -997,6 +1003,8 @@ onUnmounted(() => {
 /* 编辑器样式 */
 .editor-content {
   padding: 32px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .editor-container {
