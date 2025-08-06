@@ -25,6 +25,8 @@ func main() {
 		},
 		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 1},
 		Frameless:        true, // 移除系统默认边框
+		CSSDragProperty:  "-webkit-app-region",
+		CSSDragValue:     "drag",
 		OnStartup:        app.startup,
 		Bind: []interface{}{
 			app,

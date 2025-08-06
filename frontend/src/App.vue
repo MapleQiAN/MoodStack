@@ -164,6 +164,7 @@ const closeWindow = () => {
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
+  -webkit-app-region: drag;
 }
 
 .app-info {
