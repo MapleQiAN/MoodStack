@@ -2,12 +2,26 @@ package app
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+// Diary represents a diary entry
+type Diary struct {
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content"`
+	FileName  string    `json:"fileName"`
+	FileType  string    `json:"fileType"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Tags      []string  `json:"tags"`
+}
 
 // FileInfo represents information about an uploaded file
 type FileInfo struct {
@@ -15,6 +29,72 @@ type FileInfo struct {
 	Size int64  `json:"size"`
 	Type string `json:"type"`
 	Path string `json:"path"`
+}
+
+var diariesDir = "diaries"
+
+// EnsureDiariesDir creates the diaries directory if it doesn't exist
+func EnsureDiariesDir() error {
+	return os.MkdirAll(diariesDir, 0755)
+}
+
+// GetDiariesList returns all diary entries
+func GetDiariesList() ([]Diary, error) {
+	var diaries []Diary
+
+	files, err := ioutil.ReadDir(diariesDir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		if filepath.Ext(file.Name()) == ".json" {
+			filePath := filepath.Join(diariesDir, file.Name())
+			data, err := ioutil.ReadFile(filePath)
+			if err != nil {
+				continue
+			}
+
+			var diary Diary
+			if err := json.Unmarshal(data, &diary); err != nil {
+				continue
+			}
+
+			diaries = append(diaries, diary)
+		}
+	}
+
+	return diaries, nil
+}
+
+// GetDiaryByID returns a specific diary by ID
+func GetDiaryByID(id string) (*Diary, error) {
+	filePath := filepath.Join(diariesDir, id+".json")
+
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var diary Diary
+	if err := json.Unmarshal(data, &diary); err != nil {
+		return nil, err
+	}
+
+	return &diary, nil
+}
+
+// SaveDiary saves a diary entry to file
+func SaveDiary(diary *Diary) error {
+	diary.UpdatedAt = time.Now()
+
+	data, err := json.MarshalIndent(diary, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	filePath := filepath.Join(diariesDir, diary.ID+".json")
+	return ioutil.WriteFile(filePath, data, 0644)
 }
 
 // UploadFile saves an uploaded file and returns its information

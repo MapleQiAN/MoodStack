@@ -10,20 +10,20 @@ import (
 func ConvertToMarkdown(content []byte, fileType string) (string, error) {
 	switch strings.ToLower(fileType) {
 	case ".txt":
-		return convertTxtToMarkdown(content)
+		return ConvertTxtToMarkdown(content)
 	case ".md":
 		return string(content), nil
 	case ".docx":
-		return convertDocxToMarkdown(content)
+		return ConvertDocxToMarkdown(content)
 	case ".pdf":
-		return convertPdfToMarkdown(content)
+		return ConvertPdfToMarkdown(content)
 	default:
 		return "", fmt.Errorf("unsupported file type: %s", fileType)
 	}
 }
 
-// convertTxtToMarkdown converts plain text to markdown
-func convertTxtToMarkdown(content []byte) (string, error) {
+// ConvertTxtToMarkdown converts plain text to markdown
+func ConvertTxtToMarkdown(content []byte) (string, error) {
 	text := string(content)
 
 	// Simple conversion: wrap content in markdown code block if it looks like code
@@ -52,8 +52,8 @@ func convertTxtToMarkdown(content []byte) (string, error) {
 	return strings.Join(markdownLines, "\n"), nil
 }
 
-// convertDocxToMarkdown converts DOCX to markdown (simplified version)
-func convertDocxToMarkdown(content []byte) (string, error) {
+// ConvertDocxToMarkdown converts DOCX to markdown (simplified version)
+func ConvertDocxToMarkdown(content []byte) (string, error) {
 	// For MVP, we'll provide a placeholder
 	// In a full implementation, you would use a library like "github.com/nguyenthenguyen/docx"
 	return "# 从DOCX文件导入的内容\n\n*注意：完整的DOCX解析功能将在后续版本中实现*\n\n```\n" +
@@ -61,8 +61,8 @@ func convertDocxToMarkdown(content []byte) (string, error) {
 		"```", nil
 }
 
-// convertPdfToMarkdown converts PDF to markdown (simplified version)
-func convertPdfToMarkdown(content []byte) (string, error) {
+// ConvertPdfToMarkdown converts PDF to markdown (simplified version)
+func ConvertPdfToMarkdown(content []byte) (string, error) {
 	// For MVP, we'll provide a placeholder
 	// In a full implementation, you would use a library like "github.com/ledongthuc/pdf"
 	return "# 从PDF文件导入的内容\n\n*注意：完整的PDF解析功能将在后续版本中实现*\n\n```\n" +
