@@ -2,22 +2,48 @@
   <div class="list-container">
     <div class="list-header">
       <div class="header-content">
-        <h2 class="list-title">📚 我的日记</h2>
-        <p class="list-subtitle">共 {{ diaries.length }} 篇日记</p>
+        <h1 class="page-title">我的日记</h1>
+        <p class="page-description">共 {{ diaries.length }} 篇日记记录</p>
       </div>
-      <button @click="$emit('refresh')" class="refresh-btn">
-        <span class="refresh-icon">🔄</span>
-        <span class="refresh-text">刷新</span>
+              <button @click="selectFile" class="upload-button" :disabled="isUploading">
+        <span class="upload-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="12" y1="11" x2="12" y2="17"/>
+            <polyline points="9,14 12,11 15,14"/>
+          </svg>
+        </span>
+        <span v-if="!isUploading">新增日记</span>
+        <span v-else>上传中...</span>
       </button>
+      
+      <input 
+        ref="fileInput"
+        type="file"
+        accept=".txt,.md,.docx,.pdf"
+        @change="handleFileSelect"
+        style="display: none"
+      />
     </div>
     
     <div v-if="diaries.length === 0" class="empty-state">
-      <div class="empty-icon">📝</div>
-      <h3>还没有日记</h3>
-      <p>开始上传你的第一篇日记吧！</p>
-      <button @click="$emit('refresh')" class="empty-action-btn">
-        刷新列表
-      </button>
+      <div class="empty-visual">
+        <div class="empty-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+          </svg>
+        </div>
+        <div class="empty-decoration"></div>
+      </div>
+      <div class="empty-content">
+        <h3>还没有日记</h3>
+        <p>开始记录你的第一个心情故事吧</p>
+        <button @click="selectFile" class="empty-action">
+          上传第一篇日记
+        </button>
+      </div>
     </div>
     
     <div v-else class="diary-grid">
@@ -28,25 +54,30 @@
         @click="$emit('view-diary', diary)"
       >
         <div class="card-header">
-          <div class="diary-info">
-            <h3 class="diary-title">{{ diary.title }}</h3>
-            <div class="diary-meta">
-              <span class="diary-filename">📄 {{ diary.fileName }}</span>
-              <span class="diary-date">📅 {{ formatDate(diary.createdAt) }}</span>
-            </div>
+          <div class="diary-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
           </div>
-          <div class="diary-type-badge">
-            {{ getFileTypeIcon(diary.fileType) }}
+          <div class="diary-date">
+            {{ formatDate(diary.createdAt) }}
           </div>
         </div>
         
-        <div class="diary-preview">
-          {{ getPreview(diary.content) }}
+        <div class="card-body">
+          <h3 class="diary-title">{{ diary.title }}</h3>
+          <p class="diary-preview">{{ getPreview(diary.content) }}</p>
         </div>
         
         <div class="card-footer">
-          <span class="view-hint">点击查看完整内容</span>
-          <span class="arrow-icon">→</span>
+          <div class="file-info">
+            <span class="file-name">{{ diary.fileName }}</span>
+          </div>
+          <div class="read-more">
+            <span>阅读</span>
+            <span class="arrow">→</span>
+          </div>
         </div>
       </div>
     </div>
@@ -54,7 +85,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import { UploadDiary } from '../../wailsjs/go/main/App'
 
 const props = defineProps({
   diaries: {
@@ -63,7 +95,12 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['view-diary', 'refresh'])
+const emit = defineEmits(['view-diary', 'refresh', 'upload-success'])
+
+const fileInput = ref(null)
+const selectedFile = ref(null)
+const isUploading = ref(false)
+const uploadError = ref('')
 
 const sortedDiaries = computed(() => {
   return [...props.diaries].sort((a, b) => 
@@ -73,23 +110,94 @@ const sortedDiaries = computed(() => {
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  const now = new Date()
+  const diffTime = now - date
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 0) {
+    return '今天'
+  } else if (diffDays === 1) {
+    return '昨天'
+  } else if (diffDays < 7) {
+    return `${diffDays} 天前`
+  } else {
+    return date.toLocaleDateString('zh-CN', {
+      month: 'long',
+      day: 'numeric'
+    })
+  }
 }
 
-const getFileTypeIcon = (fileType) => {
-  const icons = {
-    '.txt': '📄',
-    '.md': '📝',
-    '.docx': '📋',
-    '.pdf': '📕'
+// 移除emoji图标函数，改用SVG图标
+
+const selectFile = () => {
+  fileInput.value.click()
+}
+
+const handleFileSelect = async (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    selectedFile.value = file
+    uploadError.value = ''
+    await uploadFile()
   }
-  return icons[fileType] || '📄'
+}
+
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const uploadFile = async () => {
+  if (!selectedFile.value) return
+  
+  // Check file size (10MB limit)
+  if (selectedFile.value.size > 10 * 1024 * 1024) {
+    uploadError.value = '文件大小不能超过 10MB'
+    alert('文件大小不能超过 10MB')
+    return
+  }
+  
+  // Check file type
+  const allowedTypes = ['.txt', '.md', '.docx', '.pdf']
+  const fileExt = '.' + selectedFile.value.name.split('.').pop().toLowerCase()
+  if (!allowedTypes.includes(fileExt)) {
+    uploadError.value = '不支持的文件类型，请选择 .txt、.md、.docx 或 .pdf 文件'
+    alert('不支持的文件类型，请选择 .txt、.md、.docx 或 .pdf 文件')
+    return
+  }
+  
+  try {
+    isUploading.value = true
+    uploadError.value = ''
+    
+    // Read file content
+    const arrayBuffer = await selectedFile.value.arrayBuffer()
+    const uint8Array = new Uint8Array(arrayBuffer)
+    
+    // Convert to regular array for Go
+    const content = Array.from(uint8Array)
+    
+    // Upload file
+    await UploadDiary(selectedFile.value.name, content)
+    
+    // Reset form
+    selectedFile.value = null
+    fileInput.value.value = ''
+    
+    // 发送成功事件
+    emit('upload-success')
+    
+  } catch (error) {
+    console.error('Upload error:', error)
+    uploadError.value = error.message || '上传失败，请重试'
+    alert(error.message || '上传失败，请重试')
+  } finally {
+    isUploading.value = false
+  }
 }
 
 const getPreview = (content) => {
@@ -104,141 +212,156 @@ const getPreview = (content) => {
     .replace(/\n+/g, ' ') // Replace newlines with spaces
     .trim()
   
-  return preview.length > 120 ? preview.substring(0, 120) + '...' : preview
+  return preview.length > 100 ? preview.substring(0, 100) + '...' : preview
 }
 </script>
 
 <style scoped>
 .list-container {
-  width: 100%;
+  max-width: 100%;
+  padding: 32px;
+  box-sizing: border-box;
 }
 
 .list-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 40px;
-  padding: 32px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(30px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+  margin-bottom: 32px;
 }
 
 .header-content {
   flex: 1;
 }
 
-.list-title {
+.page-title {
+  font-family: var(--font-display);
   font-size: 32px;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.95);
-  margin-bottom: 12px;
-  letter-spacing: -0.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.025em;
 }
 
-.list-subtitle {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
+.page-description {
+  font-size: 16px;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
-.refresh-btn {
+.upload-button {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 24px;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 600;
-  font-size: 15px;
-  backdrop-filter: blur(20px);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
-.refresh-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+.upload-button:hover:not(:disabled) {
+  background: var(--accent-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
-.refresh-icon {
+.upload-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.upload-icon {
   font-size: 16px;
 }
 
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.9);
-  margin-top: 100px;
-  padding: 80px 50px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(30px);
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.empty-visual {
+  position: relative;
+  margin-bottom: 32px;
 }
 
 .empty-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
-  opacity: 0.7;
+  color: var(--text-muted);
+  opacity: 0.6;
+  position: relative;
+  z-index: 2;
 }
 
-.empty-state h3 {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: rgba(255, 255, 255, 0.95);
-  letter-spacing: -0.3px;
+.empty-decoration {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  border: 2px solid var(--nord4);
+  border-radius: 50%;
+  z-index: 1;
+  opacity: 0.3;
 }
 
-.empty-state p {
-  font-size: 17px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 40px;
+.empty-content h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.empty-content p {
+  font-size: 16px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
   font-weight: 500;
 }
 
-.empty-action-btn {
-  padding: 16px 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.empty-action {
+  padding: 12px 24px;
+  background: var(--accent-primary);
   color: white;
   border: none;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 700;
-  font-size: 16px;
-  letter-spacing: 0.5px;
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  transition: all 0.2s ease;
+  font-size: 14px;
 }
 
-.empty-action-btn:hover {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%);
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+.empty-action:hover {
+  background: var(--accent-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .diary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-  gap: 32px;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 24px;
 }
 
 .diary-card {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 32px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  padding: 24px;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid var(--nord4);
+  box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
 }
@@ -249,18 +372,16 @@ const getPreview = (content) => {
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--nord15));
   opacity: 0;
-  transition: all 0.4s ease;
-  border-radius: 20px 20px 0 0;
+  transition: opacity 0.3s ease;
 }
 
 .diary-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--nord3);
 }
 
 .diary-card:hover::before {
@@ -270,84 +391,98 @@ const getPreview = (content) => {
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 16px;
 }
 
-.diary-info {
-  flex: 1;
-  margin-right: 16px;
+.diary-badge {
+  width: 40px;
+  height: 40px;
+  background: var(--nord5);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+  border: 1px solid var(--nord4);
+}
+
+.diary-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  background: var(--nord5);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--nord4);
+}
+
+.card-body {
+  margin-bottom: 20px;
 }
 
 .diary-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.95);
-  line-height: 1.4;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
   margin-bottom: 12px;
-  letter-spacing: -0.2px;
-}
-
-.diary-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
-}
-
-.diary-filename, .diary-date {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.diary-type-badge {
-  font-size: 24px;
-  opacity: 0.9;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  min-width: 48px;
-  text-align: center;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .diary-preview {
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.7;
-  margin-bottom: 24px;
-  min-height: 54px;
-  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 14px;
   font-weight: 500;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 16px;
+  border-top: 1px solid var(--nord4);
 }
 
-.view-hint {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
+.file-info {
+  flex: 1;
+}
+
+.file-name {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  background: var(--nord5);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--nord4);
+  display: inline-block;
+}
+
+.read-more {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  color: var(--accent-primary);
 }
 
-.arrow-icon {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 18px;
-  font-weight: 700;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+.arrow {
+  font-size: 14px;
+  transition: transform 0.2s ease;
 }
 
-.diary-card:hover .arrow-icon {
-  transform: translateX(8px) scale(1.2);
+.diary-card:hover .arrow {
+  transform: translateX(4px);
 }
 
 /* 响应式设计 */
@@ -358,7 +493,7 @@ const getPreview = (content) => {
     align-items: stretch;
   }
   
-  .refresh-btn {
+  .upload-button {
     align-self: flex-end;
   }
   
@@ -371,8 +506,24 @@ const getPreview = (content) => {
     padding: 20px;
   }
   
-  .list-title {
-    font-size: 24px;
+  .page-title {
+    font-size: 28px;
+  }
+  
+  .empty-state {
+    padding: 60px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .read-more {
+    justify-content: center;
   }
 }
 </style>
