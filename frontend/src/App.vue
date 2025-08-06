@@ -63,11 +63,7 @@ const showListView = () => {
         <span class="app-subtitle">你的心事，只让你和本地大模型知道</span>
       </div>
       <div class="titlebar-right">
-        <div class="window-controls">
-          <div class="control-btn minimize"></div>
-          <div class="control-btn maximize"></div>
-          <div class="control-btn close"></div>
-        </div>
+        <!-- 移除窗口控制按钮，保持空间平衡 -->
       </div>
     </div>
 
@@ -111,7 +107,7 @@ const showListView = () => {
         <div class="content-container">
           <div v-if="loading" class="loading">
             <div class="loading-spinner"></div>
-            <p>加载中...</p>
+            <p class="loading-text">正在加载你的日记...</p>
           </div>
           
           <DiaryUpload 
@@ -145,8 +141,8 @@ const showListView = () => {
 }
 
 body {
-  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: 'Inter', 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
   overflow: hidden;
 }
@@ -159,16 +155,17 @@ body {
 
 /* 自定义状态栏 */
 .custom-titlebar {
-  height: 40px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  height: 60px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 32px;
   -webkit-app-region: drag;
   user-select: none;
+  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.1);
 }
 
 .titlebar-left {
@@ -182,9 +179,10 @@ body {
 }
 
 .app-name {
-  font-weight: 600;
-  color: #4a5568;
-  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 20px;
+  letter-spacing: -0.5px;
 }
 
 .titlebar-center {
@@ -193,9 +191,10 @@ body {
 }
 
 .app-subtitle {
-  color: #718096;
-  font-size: 14px;
-  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
 .titlebar-right {
@@ -203,35 +202,7 @@ body {
   align-items: center;
 }
 
-.window-controls {
-  display: flex;
-  gap: 8px;
-  -webkit-app-region: no-drag;
-}
-
-.control-btn {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.control-btn.minimize {
-  background: #ffbd2e;
-}
-
-.control-btn.maximize {
-  background: #28ca42;
-}
-
-.control-btn.close {
-  background: #ff5f57;
-}
-
-.control-btn:hover {
-  transform: scale(1.1);
-}
+/* 窗口控制按钮样式已移除 */
 
 /* 主布局容器 */
 .main-container {
@@ -242,13 +213,14 @@ body {
 
 /* 左侧边栏 */
 .sidebar {
-  width: 280px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  width: 300px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
-  padding: 24px 0;
+  padding: 32px 0;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-header {
@@ -257,9 +229,10 @@ body {
 }
 
 .sidebar-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #2d3748;
+  font-size: 24px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: -0.5px;
 }
 
 .sidebar-nav {
@@ -269,28 +242,33 @@ body {
 
 .nav-item {
   width: 100%;
-  padding: 16px 24px;
+  padding: 18px 32px;
   background: transparent;
   border: none;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  color: #4a5568;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
+  border-radius: 0 25px 25px 0;
+  margin: 4px 0;
+  position: relative;
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.5);
-  color: #2d3748;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.95);
+  transform: translateX(8px);
 }
 
 .nav-item.active {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  border-right: 3px solid #667eea;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+  transform: translateX(8px);
 }
 
 .nav-icon {
@@ -313,22 +291,28 @@ body {
 }
 
 .count-number {
-  font-size: 24px;
-  font-weight: 700;
-  color: #667eea;
+  font-size: 28px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .count-label {
-  color: #718096;
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+  font-weight: 500;
 }
 
 /* 右侧主内容区 */
 .content-area {
   flex: 1;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
   overflow-y: auto;
+  border-radius: 20px 0 0 0;
 }
 
 .content-container {
@@ -337,24 +321,33 @@ body {
   margin: 0 auto;
 }
 
-/* 加载状态 */
+/* 现代化加载状态 */
 .loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 400px;
-  color: #4a5568;
+  height: 500px;
+  color: rgba(255, 255, 255, 0.9);
+  animation: fadeInUp 0.6s ease-out;
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(102, 126, 234, 0.2);
-  border-top: 3px solid #667eea;
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid rgba(255, 255, 255, 0.8);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  animation: spin 1.2s ease-in-out infinite;
+  margin-bottom: 24px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+.loading-text {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes spin {

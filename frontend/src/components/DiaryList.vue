@@ -117,13 +117,13 @@ const getPreview = (content) => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 32px;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
@@ -131,37 +131,40 @@ const getPreview = (content) => {
 }
 
 .list-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 8px;
+  font-size: 32px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
 }
 
 .list-subtitle {
-  color: #718096;
-  font-size: 16px;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
 .refresh-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  border-radius: 12px;
+  gap: 10px;
+  padding: 14px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  font-size: 14px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  font-size: 15px;
+  backdrop-filter: blur(20px);
 }
 
 .refresh-btn:hover {
-  background: rgba(102, 126, 234, 0.15);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
 }
 
 .refresh-icon {
@@ -170,13 +173,14 @@ const getPreview = (content) => {
 
 .empty-state {
   text-align: center;
-  color: #4a5568;
-  margin-top: 80px;
-  padding: 60px 40px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 100px;
+  padding: 80px 50px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
 .empty-icon {
@@ -186,49 +190,55 @@ const getPreview = (content) => {
 }
 
 .empty-state h3 {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #2d3748;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: -0.3px;
 }
 
 .empty-state p {
-  font-size: 16px;
-  color: #718096;
-  margin-bottom: 32px;
-}
-
-.empty-action-btn {
-  padding: 12px 24px;
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 40px;
   font-weight: 500;
 }
 
+.empty-action-btn {
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
 .empty-action-btn:hover {
-  background: rgba(102, 126, 234, 0.15);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%);
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
 }
 
 .diary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 32px;
 }
 
 .diary-card {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  padding: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 32px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
 }
@@ -239,16 +249,18 @@ const getPreview = (content) => {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: all 0.4s ease;
+  border-radius: 20px 20px 0 0;
 }
 
 .diary-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-  border-color: rgba(102, 126, 234, 0.2);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .diary-card:hover::before {
@@ -268,19 +280,21 @@ const getPreview = (content) => {
 }
 
 .diary-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2d3748;
+  font-size: 20px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
   line-height: 1.4;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  letter-spacing: -0.2px;
 }
 
 .diary-meta {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: #718096;
+  gap: 6px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
 }
 
 .diary-filename, .diary-date {
@@ -290,46 +304,50 @@ const getPreview = (content) => {
 }
 
 .diary-type-badge {
-  font-size: 20px;
-  opacity: 0.8;
-  padding: 8px;
-  background: rgba(102, 126, 234, 0.1);
-  border-radius: 8px;
-  min-width: 40px;
+  font-size: 24px;
+  opacity: 0.9;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  min-width: 48px;
   text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .diary-preview {
-  color: #4a5568;
-  line-height: 1.6;
-  margin-bottom: 16px;
-  min-height: 48px;
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.7;
+  margin-bottom: 24px;
+  min-height: 54px;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .view-hint {
-  color: #667eea;
-  font-size: 13px;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .arrow-icon {
-  color: #667eea;
-  font-size: 16px;
-  font-weight: 600;
-  transition: transform 0.3s ease;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  font-weight: 700;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .diary-card:hover .arrow-icon {
-  transform: translateX(4px);
+  transform: translateX(8px) scale(1.2);
 }
 
 /* 响应式设计 */

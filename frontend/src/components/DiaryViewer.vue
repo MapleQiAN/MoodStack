@@ -90,13 +90,13 @@ const getFileTypeIcon = (fileType) => {
 }
 
 .viewer-header {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 32px;
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
@@ -108,23 +108,24 @@ const getFileTypeIcon = (fileType) => {
 .back-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  border-radius: 12px;
+  gap: 10px;
+  padding: 14px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  font-size: 14px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  font-size: 15px;
   align-self: flex-start;
+  backdrop-filter: blur(20px);
 }
 
 .back-btn:hover {
-  background: rgba(102, 126, 234, 0.15);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
 }
 
 .back-icon {
@@ -137,29 +138,32 @@ const getFileTypeIcon = (fileType) => {
 }
 
 .diary-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 16px;
+  font-size: 36px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 20px;
   line-height: 1.2;
+  letter-spacing: -0.5px;
 }
 
 .diary-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  color: #718096;
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: rgba(102, 126, 234, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
 }
 
 .meta-icon {
@@ -167,47 +171,50 @@ const getFileTypeIcon = (fileType) => {
 }
 
 .viewer-content {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.15);
   overflow: hidden;
 }
 
 .content-wrapper {
-  padding: 32px;
-  min-height: 500px;
+  padding: 40px;
+  min-height: 600px;
 }
 
 :deep(.markdown-content) {
-  color: #2d3748;
+  color: rgba(255, 255, 255, 0.9);
   line-height: 1.8;
-  font-size: 16px;
+  font-size: 17px;
   max-width: 100%;
+  font-weight: 500;
 }
 
 :deep(.markdown-content h1) {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 32px 0 16px 0;
-  padding-bottom: 12px;
-  border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+  font-size: 32px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 40px 0 20px 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  letter-spacing: -0.3px;
 }
 
 :deep(.markdown-content h2) {
-  font-size: 24px;
-  font-weight: 600;
-  color: #4a5568;
-  margin: 28px 0 12px 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 32px 0 16px 0;
+  letter-spacing: -0.2px;
 }
 
 :deep(.markdown-content h3) {
-  font-size: 20px;
-  font-weight: 600;
-  color: #4a5568;
-  margin: 24px 0 10px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 28px 0 12px 0;
 }
 
 :deep(.markdown-content p) {
@@ -225,33 +232,37 @@ const getFileTypeIcon = (fileType) => {
 }
 
 :deep(.markdown-content blockquote) {
-  border-left: 4px solid #667eea;
-  background: rgba(102, 126, 234, 0.05);
-  padding: 16px 20px;
-  margin: 24px 0;
-  border-radius: 0 12px 12px 0;
+  border-left: 4px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px 24px;
+  margin: 28px 0;
+  border-radius: 0 16px 16px 0;
   font-style: italic;
-  color: #4a5568;
+  color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
 }
 
 :deep(.markdown-content code) {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 14px;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.95);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 600;
 }
 
 :deep(.markdown-content pre) {
-  background: #2d3748;
-  color: #f7fafc;
-  padding: 20px;
-  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.95);
+  padding: 24px;
+  border-radius: 16px;
   overflow-x: auto;
-  margin: 24px 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 32px 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 :deep(.markdown-content pre code) {
@@ -265,55 +276,61 @@ const getFileTypeIcon = (fileType) => {
 :deep(.markdown-content table) {
   width: 100%;
   border-collapse: collapse;
-  margin: 24px 0;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  margin: 32px 0;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
 }
 
 :deep(.markdown-content th) {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  padding: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.95);
+  padding: 20px;
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
+  backdrop-filter: blur(20px);
 }
 
 :deep(.markdown-content td) {
-  padding: 16px;
-  border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 :deep(.markdown-content tr:nth-child(even)) {
-  background: rgba(102, 126, 234, 0.05);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 :deep(.markdown-content hr) {
   border: none;
   height: 2px;
-  background: linear-gradient(to right, transparent, rgba(102, 126, 234, 0.3), transparent);
-  margin: 32px 0;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
+  margin: 40px 0;
+  border-radius: 1px;
 }
 
 :deep(.markdown-content a) {
-  color: #667eea;
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
   transition: all 0.3s ease;
+  font-weight: 600;
 }
 
 :deep(.markdown-content a:hover) {
-  color: #5a67d8;
-  border-bottom-color: #5a67d8;
+  color: rgba(255, 255, 255, 1);
+  border-bottom-color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 :deep(.markdown-content img) {
   max-width: 100%;
   height: auto;
-  border-radius: 12px;
-  margin: 20px 0;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  margin: 24px 0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 

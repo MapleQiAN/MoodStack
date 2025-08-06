@@ -184,58 +184,64 @@ const uploadFile = async () => {
 
 .upload-header {
   text-align: center;
-  margin-bottom: 32px;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
 }
 
 .upload-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 8px;
+  font-size: 32px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
 }
 
 .upload-description {
-  color: #718096;
-  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 17px;
   font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
 .upload-card {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  padding: 32px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 40px;
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
 .upload-area {
-  border: 3px dashed rgba(102, 126, 234, 0.3);
-  border-radius: 16px;
-  padding: 48px 32px;
+  border: 3px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 60px 40px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 24px;
-  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 32px;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
 }
 
 .upload-area:hover {
-  border-color: #667eea;
-  background: rgba(102, 126, 234, 0.05);
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
 }
 
 .upload-area.drag-over {
-  border-color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
-  transform: scale(1.02);
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
 
 .upload-area.uploading {
@@ -257,43 +263,47 @@ const uploadFile = async () => {
 }
 
 .upload-text {
-  color: #4a5568;
-  font-size: 18px;
-  margin-bottom: 8px;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 20px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
 .upload-hint {
-  color: #a0aec0;
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .uploading-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #667eea;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .upload-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(102, 126, 234, 0.2);
-  border-top: 3px solid #667eea;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top: 4px solid rgba(255, 255, 255, 0.8);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .file-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  background: rgba(102, 126, 234, 0.1);
-  border-radius: 12px;
-  margin-bottom: 24px;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  margin-bottom: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .file-details {
@@ -313,32 +323,36 @@ const uploadFile = async () => {
 }
 
 .file-name {
-  font-weight: 600;
-  color: #2d3748;
-  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 17px;
+  letter-spacing: 0.2px;
 }
 
 .file-size {
-  font-size: 13px;
-  color: #718096;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
 }
 
 .upload-btn {
-  padding: 12px 24px;
-  background: #667eea;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-weight: 600;
+  border-radius: 16px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 14px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
 .upload-btn:hover:not(:disabled) {
-  background: #5a67d8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
 }
 
 .upload-btn:disabled {
@@ -356,13 +370,15 @@ const uploadFile = async () => {
 }
 
 .error-message {
-  background: rgba(245, 101, 101, 0.1);
-  border: 1px solid rgba(245, 101, 101, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  backdrop-filter: blur(20px);
 }
 
 .success-message {
-  background: rgba(72, 187, 120, 0.1);
-  border: 1px solid rgba(72, 187, 120, 0.3);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  backdrop-filter: blur(20px);
 }
 
 .error-icon, .success-icon {
@@ -377,16 +393,19 @@ const uploadFile = async () => {
 }
 
 .error-content h4 {
-  color: #e53e3e;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 700;
 }
 
 .success-content h4 {
-  color: #38a169;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 700;
 }
 
 .error-content p, .success-content p {
-  font-size: 14px;
-  color: #718096;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
 }
 
 @keyframes spin {
