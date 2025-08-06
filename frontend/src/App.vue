@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { GetDiariesList, GetDiaryByID } from '../wailsjs/go/main/App'
 import DiaryList from './components/DiaryList.vue'
 import DiaryViewer from './components/DiaryViewer.vue'
@@ -11,9 +11,39 @@ const selectedDiary = ref(null)
 const loading = ref(false)
 const editingDiary = ref(null)
 
+// 新增状态管理
+const sidebarCollapsed = ref(false)
+const isDarkMode = ref(false)
+
+// 从本地存储恢复主题设置
 onMounted(async () => {
+  const savedTheme = localStorage.getItem('moodstack-theme')
+  if (savedTheme === 'dark') {
+    isDarkMode.value = true
+    document.documentElement.setAttribute('data-theme', 'dark')
+  }
+  
+  const savedSidebarState = localStorage.getItem('moodstack-sidebar-collapsed')
+  if (savedSidebarState === 'true') {
+    sidebarCollapsed.value = true
+  }
+  
   await loadDiaries()
 })
+
+// 切换侧边栏状态
+const toggleSidebar = () => {
+  sidebarCollapsed.value = !sidebarCollapsed.value
+  localStorage.setItem('moodstack-sidebar-collapsed', sidebarCollapsed.value.toString())
+}
+
+// 切换主题模式
+const toggleTheme = () => {
+  isDarkMode.value = !isDarkMode.value
+  const theme = isDarkMode.value ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('moodstack-theme', theme)
+}
 
 const loadDiaries = async () => {
   try {
@@ -93,8 +123,34 @@ const closeWindow = () => {
     <div class="titlebar">
       <div class="titlebar-content">
         <div class="app-info">
+          <button class="sidebar-toggle" @click="toggleSidebar" title="切换侧边栏">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
           <h1 class="app-title">MoodStack</h1>
           <span class="app-subtitle">心栈</span>
+        </div>
+        
+        <div class="titlebar-actions">
+          <button class="theme-toggle" @click="toggleTheme" title="切换主题">
+            <svg v-if="!isDarkMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
         </div>
         
         <div class="window-controls">
@@ -120,17 +176,24 @@ const closeWindow = () => {
     <!-- 主布局 -->
     <div class="main-layout">
       <!-- 左侧边栏 -->
-      <aside class="sidebar">
+      <aside :class="['sidebar', { collapsed: sidebarCollapsed }]">
         <nav class="navigation">
           <button 
             @click="showListView" 
             :class="['nav-item', { active: currentView === 'list' || currentView === 'viewer' || currentView === 'editor' }]"
+            :title="sidebarCollapsed ? '我的日记' : ''"
           >
-            <span class="nav-text">我的日记</span>
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+              </svg>
+            </span>
+            <span class="nav-text" v-show="!sidebarCollapsed">我的日记</span>
           </button>
         </nav>
         
-        <div class="sidebar-footer">
+        <div class="sidebar-footer" v-show="!sidebarCollapsed">
           <div class="stats">
             <div class="stat-item">
               <span class="stat-label">记录总数</span>
@@ -215,6 +278,33 @@ const closeWindow = () => {
   -webkit-app-region: drag;
 }
 
+.sidebar-toggle, .theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
+}
+
+.sidebar-toggle:hover, .theme-toggle:hover {
+  background: var(--nord5);
+  color: var(--text-primary);
+}
+
+.titlebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
 .app-title {
   font-family: var(--font-display);
   font-weight: 700;
@@ -282,6 +372,13 @@ const closeWindow = () => {
   display: flex;
   flex-direction: column;
   padding: 24px 16px;
+  transition: width 0.3s var(--ease-spring), padding 0.3s var(--ease-spring);
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 72px;
+  padding: 24px 12px;
 }
 
 .navigation {
@@ -307,6 +404,20 @@ const closeWindow = () => {
   color: var(--text-secondary);
   text-align: left;
   width: 100%;
+  justify-content: flex-start;
+  min-height: 44px;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 12px;
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .nav-item:hover {
@@ -517,5 +628,56 @@ const closeWindow = () => {
     padding: 8px 10px;
     font-size: 13px;
   }
+}
+</style>
+
+<style>
+/* 全局夜间模式支持 */
+:root {
+  /* 默认亮色主题 */
+  --bg-primary: #fafafa;
+  --bg-secondary: #ffffff;
+  --text-primary: #2e3440;
+  --text-secondary: #4c566a;
+  --text-muted: #5e81ac;
+  --border-color: #e5e9f0;
+  --accent-primary: #5e81ac;
+  --accent-secondary: #81a1c1;
+}
+
+[data-theme="dark"] {
+  /* 夜间模式 */
+  --bg-primary: #2e3440;
+  --bg-secondary: #3b4252;
+  --text-primary: #eceff4;
+  --text-secondary: #d8dee9;
+  --text-muted: #88c0d0;
+  --border-color: #4c566a;
+  --accent-primary: #88c0d0;
+  --accent-secondary: #81a1c1;
+  
+  /* 更新现有变量 */
+  --nord0: #2e3440;
+  --nord1: #3b4252;
+  --nord2: #434c5e;
+  --nord3: #4c566a;
+  --nord4: #5e81ac;
+  --nord5: #434c5e;
+  --nord6: #d8dee9;
+  --nord7: #e5e9f0;
+  --nord8: #eceff4;
+  --nord9: #8fbcbb;
+  --nord10: #88c0d0;
+  --nord11: #81a1c1;
+  --nord12: #5e81ac;
+  
+  /* 背景渐变 */
+  --bg-gradient: linear-gradient(135deg, #2e3440 0%, #3b4252 50%, #434c5e 100%);
+  --bg-glass: rgba(62, 68, 81, 0.85);
+}
+
+/* 添加切换动画 */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 </style>
