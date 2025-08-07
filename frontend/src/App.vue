@@ -317,7 +317,7 @@ const triggerViewerSearch = (searchTerm) => {
               type="text" 
               class="search-input"
               v-model="searchQuery"
-              placeholder="全局搜索... (Ctrl+K)"
+              placeholder="全局搜索..."
               @focus="onSearchFocus"
               @blur="onSearchBlur"
               @input="onSearchInput"
@@ -572,6 +572,9 @@ const triggerViewerSearch = (searchTerm) => {
   color: var(--text-muted);
   pointer-events: none;
   transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-input {
@@ -627,6 +630,9 @@ kbd {
   right: 12px;
   transform: translateY(-50%);
   color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-spinner {
@@ -681,6 +687,9 @@ kbd {
 
 .empty-icon {
   color: var(--text-disabled);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-results {
@@ -837,6 +846,11 @@ kbd {
   -webkit-app-region: no-drag;
 }
 
+.sidebar-toggle svg, .theme-toggle svg {
+  display: block;
+  flex-shrink: 0;
+}
+
 .sidebar-toggle:hover, .theme-toggle:hover {
   background: var(--bg-tertiary);
   color: var(--text-primary);
@@ -893,6 +907,11 @@ kbd {
   color: var(--text-muted);
   transition: all 0.2s ease;
   -webkit-app-region: no-drag;
+}
+
+.control-btn svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .control-btn:hover {
@@ -972,6 +991,11 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-icon svg {
+  display: block;
   flex-shrink: 0;
 }
 

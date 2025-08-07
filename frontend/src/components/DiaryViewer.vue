@@ -8,7 +8,7 @@
             <polyline points="15,18 9,12 15,6"/>
           </svg>
         </span>
-        <span>返回列表</span>
+        <span>返回</span>
       </button>
 
       <!-- 页内搜索栏或文章标题 -->
@@ -788,6 +788,15 @@ defineExpose({
 .back-icon {
   font-size: 16px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .header-actions {
