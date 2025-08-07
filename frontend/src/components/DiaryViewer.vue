@@ -54,6 +54,7 @@
             <span v-else>保存中...</span>
           </button>
         </div>
+        </div>
       </div>
     </div>
     
