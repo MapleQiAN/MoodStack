@@ -1,36 +1,13 @@
 <template>
   <div class="auth-overlay" v-if="visible">
     <div class="auth-dialog" :class="{ 'setup-mode': isSetupMode }">
-      <!-- 自定义标题栏 -->
-      <div class="auth-titlebar">
-        <div class="auth-titlebar-content">
-          <div class="titlebar-drag-area"></div>
-          <div class="window-controls">
-            <button class="control-btn minimize" @click="minimizeWindow">
-              <svg width="12" height="1" viewBox="0 0 12 1" fill="currentColor">
-                <rect width="12" height="1" />
-              </svg>
-            </button>
-            <button class="control-btn maximize" @click="maximizeWindow">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1">
-                <rect x="1" y="1" width="10" height="10" />
-              </svg>
-            </button>
-            <button class="control-btn close" @click="closeWindow">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M2 2l8 8M10 2l-8 8" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
 
       <div class="auth-header">
         <h2 class="auth-title">
-          {{ isSetupMode ? '初始化 MoodStack' : '解锁 MoodStack' }}
+          {{ isSetupMode ? '初始化 MoodStack' : 'MoodStack' }}
         </h2>
         <p class="auth-subtitle">
-          {{ isSetupMode ? '创建您的第一个账户来保护您的日记' : '请验证身份以访问您的加密日记' }}
+          {{ isSetupMode ? '创建您的第一个账户来保护您的日记，账户仅保存于本地' : '请验证身份以访问您的加密日记' }}
         </p>
         
         <!-- 模式切换按钮 -->
@@ -516,24 +493,7 @@ const checkAuthStatus = async () => {
   }
 }
 
-// 窗口控制方法
-const minimizeWindow = () => {
-  if (window.runtime && window.runtime.WindowMinimise) {
-    window.runtime.WindowMinimise()
-  }
-}
-
-const maximizeWindow = () => {
-  if (window.runtime && window.runtime.WindowToggleMaximise) {
-    window.runtime.WindowToggleMaximise()
-  }
-}
-
-const closeWindow = () => {
-  if (window.runtime && window.runtime.Quit) {
-    window.runtime.Quit()
-  }
-}
+// 窗口控制方法已移除 - 登录界面不再需要窗口控制
 
 // 模式切换方法
 const toggleMode = () => {
@@ -564,12 +524,11 @@ onMounted(() => {
 <style scoped>
 .auth-overlay {
   position: fixed;
-  top: 0;
+  top: 48px; /* 顶栏高度 */
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
+  background: var(--bg-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -580,20 +539,24 @@ onMounted(() => {
 .auth-dialog {
   background: var(--bg-primary);
   border-radius: var(--radius-xl);
-  padding: 0;
+  padding: 40px;
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.12), 
+    0 10px 25px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
   animation: slideUp 0.4s ease-out;
   display: flex;
   flex-direction: column;
+  backdrop-filter: blur(20px);
+  position: relative;
 }
 
 .auth-dialog-content {
-  padding: 32px;
   overflow-y: auto;
   flex: 1;
 }
@@ -602,75 +565,12 @@ onMounted(() => {
   max-width: 520px;
 }
 
-/* 自定义标题栏样式 */
-.auth-titlebar {
-  height: 40px;
-  background: var(--bg-header);
-  border-bottom: 1px solid var(--border-color);
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-  -webkit-app-region: drag;
-  user-select: none;
-}
-
-.auth-titlebar-content {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-}
-
-.titlebar-drag-area {
-  flex: 1;
-  height: 100%;
-  -webkit-app-region: drag;
-}
-
-.window-controls {
-  display: flex;
-  gap: 8px;
-  -webkit-app-region: no-drag;
-}
-
-.control-btn {
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  transition: all 0.2s ease;
-  -webkit-app-region: no-drag;
-}
-
-.control-btn svg {
-  display: block;
-  flex-shrink: 0;
-}
-
-.control-btn:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  transform: scale(1.1);
-}
-
-.control-btn.close:hover {
-  background: var(--accent-error);
-  color: white;
-  transform: scale(1.1);
-}
-
-.control-btn:active {
-  transform: scale(0.95);
-}
+/* 标题栏样式已移除 - 简化登录界面 */
 
 .auth-header {
   text-align: center;
   margin-bottom: 32px;
+  padding-top: 8px;
 }
 
 .mode-switch {
@@ -701,10 +601,11 @@ onMounted(() => {
 
 .auth-title {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.02em;
 }
 
 .auth-subtitle {
@@ -953,11 +854,11 @@ onMounted(() => {
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 

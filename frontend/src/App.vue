@@ -354,11 +354,11 @@ const handleUserUpdated = () => {
 
 <template>
   <div id="app">
-    <!-- 标题栏 -->
+    <!-- 标题栏 - 始终显示 -->
     <div class="titlebar">
-      <div class="titlebar-content">
+      <div class="titlebar-content" :class="{ 'no-search': !isAuthenticated }">
         <div class="app-info">
-          <button class="sidebar-toggle" @click="toggleSidebar" title="切换侧边栏">
+          <button v-if="isAuthenticated" class="sidebar-toggle" @click="toggleSidebar" title="切换侧边栏">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="3" y1="6" x2="21" y2="6"/>
               <line x1="3" y1="12" x2="21" y2="12"/>
@@ -369,8 +369,8 @@ const handleUserUpdated = () => {
           <span class="app-subtitle">心栈</span>
         </div>
         
-        <!-- 全局搜索 -->
-        <div class="global-search">
+        <!-- 全局搜索 - 仅在已登录时显示 -->
+        <div v-if="isAuthenticated" class="global-search">
           <div class="search-container" :class="{ 'search-mode': searchMode }">
             <div class="search-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -641,6 +641,13 @@ const handleUserUpdated = () => {
   padding: 0 16px;
   gap: 16px;
   -webkit-app-region: drag;
+}
+
+/* 未登录状态下的标题栏布局 */
+.titlebar-content.no-search .app-info {
+  /* 无搜索框时，让应用信息靠左 */
+  flex: 1;
+  justify-content: flex-start;
 }
 
 .global-search {
