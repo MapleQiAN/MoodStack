@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { GetDiariesList, GetDiaryByID } from '../wailsjs/go/main/App'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
+import { GetDiariesList, GetDiaryByID, SearchDiariesWithContext } from '../wailsjs/go/main/App'
 import DiaryList from './components/DiaryList.vue'
 import DiaryViewer from './components/DiaryViewer.vue'
 import DiaryEditor from './components/DiaryEditor.vue'
@@ -10,6 +10,12 @@ const diaries = ref([])
 const selectedDiary = ref(null)
 const loading = ref(false)
 const editingDiary = ref(null)
+const searchQuery = ref('')
+const searchMode = ref(false)
+const searchResults = ref([])
+const searchLoading = ref(false)
+const showSearchResults = ref(false)
+let searchTimeout = null
 
 // 新增状态管理
 const sidebarCollapsed = ref(false)
@@ -29,6 +35,114 @@ onMounted(async () => {
   }
   
   await loadDiaries()
+})
+
+const focusSearch = () => {
+  searchMode.value = true
+  // 使用 nextTick 确保 input 在 DOM 中渲染完毕
+  nextTick(() => {
+    document.querySelector('.search-input')?.focus()
+  })
+}
+
+const handleKeydown = (event) => {
+  if (event.ctrlKey && event.key === 'k') {
+    event.preventDefault()
+    focusSearch()
+  }
+  if (event.key === 'Escape' && searchMode.value) {
+    searchMode.value = false
+    searchQuery.value = ''
+    showSearchResults.value = false
+  }
+}
+
+// 搜索相关方法
+const onSearchFocus = () => {
+  searchMode.value = true
+  if (searchQuery.value.trim()) {
+    showSearchResults.value = true
+  }
+}
+
+const onSearchBlur = () => {
+  // 延迟关闭搜索结果，以便处理点击事件
+  setTimeout(() => {
+    searchMode.value = false
+    showSearchResults.value = false
+  }, 200)
+}
+
+const onSearchInput = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+
+  if (!searchQuery.value.trim()) {
+    searchResults.value = []
+    showSearchResults.value = false
+    return
+  }
+
+  showSearchResults.value = true
+  searchLoading.value = true
+
+  // 防抖搜索
+  searchTimeout = setTimeout(async () => {
+    try {
+      const results = await SearchDiariesWithContext(searchQuery.value.trim())
+      searchResults.value = results
+    } catch (error) {
+      console.error('搜索失败:', error)
+      searchResults.value = []
+    } finally {
+      searchLoading.value = false
+    }
+  }, 300)
+}
+
+const handleSearchResultClick = async (result) => {
+  try {
+    // 加载完整的日记
+    const fullDiary = await GetDiaryByID(result.diary.id)
+    selectedDiary.value = fullDiary
+    currentView.value = 'viewer'
+    
+    // 关闭搜索
+    searchMode.value = false
+    showSearchResults.value = false
+    
+    // 清空搜索查询
+    searchQuery.value = ''
+    
+    // TODO: 如果有匹配的内容片段，可以在这里实现滚动到相应位置的逻辑
+  } catch (error) {
+    console.error('打开日记失败:', error)
+  }
+}
+
+const highlightSearchText = (text, query) => {
+  if (!query.trim()) return text
+  
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+  return text.replace(regex, '<mark>$1</mark>')
+}
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
 })
 
 // 切换侧边栏状态
@@ -134,6 +248,96 @@ const closeWindow = () => {
           <span class="app-subtitle">心栈</span>
         </div>
         
+        <!-- 全局搜索 -->
+        <div class="global-search">
+          <div class="search-container" :class="{ 'search-mode': searchMode }">
+            <div class="search-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              class="search-input"
+              v-model="searchQuery"
+              placeholder="全局搜索... (Ctrl+K)"
+              @focus="onSearchFocus"
+              @blur="onSearchBlur"
+              @input="onSearchInput"
+            />
+            <div class="search-shortcut" v-show="!searchMode && !searchQuery">
+              <kbd>Ctrl</kbd>
+              <kbd>K</kbd>
+            </div>
+            <!-- 搜索加载状态 -->
+            <div v-if="searchLoading" class="search-loading">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-spinner">
+                <path d="M21 12a9 9 0 11-6.219-8.56"/>
+              </svg>
+            </div>
+            
+            <!-- 搜索结果下拉框 -->
+            <div v-if="showSearchResults" class="search-dropdown" @mousedown.prevent>
+              <div v-if="searchLoading" class="search-loading-state">
+                <div class="loading-spinner"></div>
+                <span>搜索中...</span>
+              </div>
+              
+              <div v-else-if="searchResults.length === 0 && searchQuery.trim()" class="search-empty-state">
+                <div class="empty-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <line x1="8" y1="11" x2="14" y2="11"/>
+                  </svg>
+                </div>
+                <span>未找到相关日记</span>
+              </div>
+              
+              <div v-else-if="searchResults.length > 0" class="search-results">
+                <div 
+                  v-for="result in searchResults" 
+                  :key="result.diary.id"
+                  class="search-result-item"
+                  @click="handleSearchResultClick(result)"
+                >
+                  <div class="result-header">
+                    <h3 class="result-title">{{ result.diary.title }}</h3>
+                    <span class="result-date">{{ formatDate(result.diary.createdAt) }}</span>
+                  </div>
+                  
+                  <div v-if="result.matchType === 'title'" class="result-match-type">
+                    <span class="match-tag title-match">标题匹配</span>
+                  </div>
+                  
+                  <div v-if="result.matchedSnippets.length > 0" class="result-snippets">
+                    <div 
+                      v-for="(snippet, index) in result.matchedSnippets.slice(0, 2)" 
+                      :key="index"
+                      class="snippet"
+                      v-html="highlightSearchText(snippet, searchQuery)"
+                    ></div>
+                  </div>
+                  
+                  <div class="result-footer">
+                    <span class="result-match-type">
+                      <span v-if="result.matchType === 'content'" class="match-tag content-match">内容匹配</span>
+                      <span v-if="result.matchType === 'both'" class="match-tag both-match">标题+内容匹配</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-if="searchQuery.trim() && !searchLoading" class="search-footer">
+                <div class="search-tip">
+                  <kbd>Enter</kbd> 选择 • <kbd>Esc</kbd> 关闭
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="titlebar-actions">
           <button class="theme-toggle" @click="toggleTheme" title="切换主题">
             <svg v-if="!isDarkMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -252,12 +456,17 @@ const closeWindow = () => {
 /* 标题栏 */
 .titlebar {
   height: 48px;
+  -webkit-app-region: drag;
   background: var(--bg-header);
   border-bottom: 1px solid var(--bg-tertiary);
   display: flex;
   align-items: center;
   position: relative;
   z-index: 100;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .titlebar-content {
@@ -266,12 +475,285 @@ const closeWindow = () => {
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
+  gap: 16px;
+  -webkit-app-region: drag;
 }
+
+.global-search {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  -webkit-app-region: drag;
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  transition: all 0.3s var(--ease-spring);
+  -webkit-app-region: no-drag;
+}
+
+.search-container.search-mode {
+  max-width: 600px;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.search-input {
+  width: 100%;
+  height: 36px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 0 40px 0 40px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  outline: none;
+  -webkit-app-region: no-drag;
+}
+
+.search-input:focus {
+  border-color: var(--accent-primary);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 3px var(--accent-primary-alpha);
+}
+
+.search-input:focus + .search-icon {
+  color: var(--accent-primary);
+}
+
+.search-shortcut {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+kbd {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* 搜索加载状态 */
+.search-loading {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: var(--accent-primary);
+}
+
+.search-spinner {
+  animation: search-spin 1s linear infinite;
+}
+
+@keyframes search-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 搜索下拉框样式 */
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px var(--shadow-color);
+  backdrop-filter: blur(16px);
+  z-index: 1000;
+  margin-top: 4px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.search-loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.search-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.empty-icon {
+  color: var(--text-disabled);
+}
+
+.search-results {
+  padding: 8px 0;
+}
+
+.search-result-item {
+  padding: 14px 18px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--bg-tertiary);
+  transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+  background: var(--surface-hover);
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.result-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+  flex: 1;
+  margin-right: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.result-snippets {
+  margin: 8px 0;
+}
+
+.snippet {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.snippet:last-child {
+  margin-bottom: 0;
+}
+
+.snippet :global(mark) {
+  background: var(--accent-primary-alpha);
+  color: var(--accent-primary);
+  border-radius: 2px;
+  padding: 1px 2px;
+  font-weight: 500;
+}
+
+.result-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.match-tag {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.title-match {
+  background: var(--accent-primary-alpha);
+  color: var(--accent-primary);
+}
+
+.content-match {
+  background: var(--success-alpha);
+  color: var(--success-primary);
+}
+
+.both-match {
+  background: var(--warning-alpha);
+  color: var(--warning-primary);
+}
+
+.search-footer {
+  padding: 8px 16px;
+  border-top: 1px solid var(--bg-tertiary);
+  background: var(--bg-secondary);
+}
+
+.search-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.search-tip kbd {
+  font-size: 10px;
+  padding: 1px 4px;
+}
+
+.loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--bg-tertiary);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: search-spin 1s linear infinite;
+}
+
 
 .app-info {
   display: flex;
   align-items: center;
   gap: 12px;
+  -webkit-app-region: drag;
 }
 
 .sidebar-toggle, .theme-toggle {
@@ -286,6 +768,7 @@ const closeWindow = () => {
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 
 .sidebar-toggle:hover, .theme-toggle:hover {
@@ -297,6 +780,7 @@ const closeWindow = () => {
   display: flex;
   align-items: center;
   gap: 8px;
+  -webkit-app-region: no-drag;
 }
 
 .app-title {
@@ -306,17 +790,28 @@ const closeWindow = () => {
   color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.025em;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-app-region: drag;
 }
 
 .app-subtitle {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-app-region: drag;
 }
 
 .window-controls {
   display: flex;
   gap: 8px;
+  -webkit-app-region: no-drag;
 }
 
 .control-btn {
@@ -331,6 +826,7 @@ const closeWindow = () => {
   justify-content: center;
   color: var(--text-muted);
   transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 
 .control-btn:hover {

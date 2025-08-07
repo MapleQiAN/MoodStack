@@ -10,8 +10,42 @@
         </span>
         <span>返回列表</span>
       </button>
+
+      <!-- 页内搜索栏 -->
+      <div v-if="showInPageSearch" class="in-page-search">
+        <input
+          type="text"
+          v-model="inPageSearchQuery"
+          placeholder="在本页搜索..."
+          class="in-page-search-input"
+          @input="performInPageSearch"
+          @keydown.enter.prevent="goToNextResult"
+          @keydown.esc.prevent="closeInPageSearch"
+        />
+        <div class="search-nav">
+          <span class="search-results-count">
+            {{ totalSearchResults > 0 ? `${currentSearchResultIndex + 1} / ${totalSearchResults}` : '0 / 0' }}
+          </span>
+          <button @click="goToPrevResult" :disabled="totalSearchResults === 0" class="search-nav-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <button @click="goToNextResult" :disabled="totalSearchResults === 0" class="search-nav-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+        <button @click="closeInPageSearch" class="close-search-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
       
-      <div class="diary-meta">
+      <div class="diary-meta" v-if="!showInPageSearch">
         <div class="meta-item">
           <span class="meta-icon">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -59,14 +93,14 @@
     </div>
     
     <!-- 查看模式 -->
-    <div v-if="!isEditing" class="viewer-content">
+    <div v-if="!isEditing" class="viewer-content" ref="contentRef">
       <article class="article-container">
         <header class="article-header">
           <h1 class="article-title">{{ diary.title }}</h1>
         </header>
         
         <div class="article-body">
-          <div class="markdown-content" v-html="renderedContent"></div>
+          <div class="markdown-content" v-html="highlightedRenderedContent"></div>
         </div>
       </article>
     </div>
@@ -222,6 +256,14 @@ const originalContent = ref('')
 // 元素引用
 const textareaRef = ref(null)
 
+// 页内搜索状态
+const showInPageSearch = ref(false)
+const inPageSearchQuery = ref('')
+const searchResultIndices = ref([])
+const currentSearchResultIndex = ref(-1)
+const totalSearchResults = ref(0)
+const contentRef = ref(null)
+
 // Configure marked options for better rendering
 marked.setOptions({
   breaks: true,
@@ -233,6 +275,28 @@ marked.setOptions({
 const renderedContent = computed(() => {
   if (!props.diary?.content) return ''
   return marked.parse(props.diary.content)
+})
+
+const highlightedRenderedContent = computed(() => {
+  if (!inPageSearchQuery.value) {
+    totalSearchResults.value = 0
+    return renderedContent.value
+  }
+  
+  const query = inPageSearchQuery.value
+  const regex = new RegExp(query, 'gi')
+  let count = 0
+
+  const highlighted = renderedContent.value.replace(regex, (match) => {
+    if (match.trim() !== '') {
+      count++
+      return `<mark class="search-highlight" data-search-index="${count - 1}">${match}</mark>`
+    }
+    return match
+  });
+
+  totalSearchResults.value = count
+  return highlighted
 })
 
 const formatDate = (dateString) => {
@@ -266,6 +330,55 @@ const startEditing = () => {
       textareaRef.value.focus()
     }
   })
+}
+
+const performInPageSearch = () => {
+  currentSearchResultIndex.value = -1
+  if (totalSearchResults.value > 0) {
+    goToNextResult()
+  }
+}
+
+const scrollToResult = (index) => {
+  const highlights = contentRef.value.querySelectorAll('.search-highlight')
+  if (highlights && highlights[index]) {
+    highlights.forEach(el => el.classList.remove('active'))
+    highlights[index].classList.add('active')
+    highlights[index].scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+  }
+}
+
+const goToNextResult = () => {
+  if (totalSearchResults.value === 0) return
+  currentSearchResultIndex.value = (currentSearchResultIndex.value + 1) % totalSearchResults.value
+  scrollToResult(currentSearchResultIndex.value)
+}
+
+const goToPrevResult = () => {
+  if (totalSearchResults.value === 0) return
+  currentSearchResultIndex.value = (currentSearchResultIndex.value - 1 + totalSearchResults.value) % totalSearchResults.value
+  scrollToResult(currentSearchResultIndex.value)
+}
+
+const openInPageSearch = () => {
+  showInPageSearch.value = true
+  nextTick(() => {
+    document.querySelector('.in-page-search-input')?.focus()
+  })
+}
+
+const closeInPageSearch = () => {
+  showInPageSearch.value = false
+  inPageSearchQuery.value = ''
+  currentSearchResultIndex.value = -1
+  totalSearchResults.value = 0
+  const highlights = contentRef.value?.querySelectorAll('.search-highlight.active')
+  if (highlights) {
+    highlights.forEach(el => el.classList.remove('active'))
+  }
 }
 
 const cancelEditing = () => {
@@ -413,49 +526,66 @@ const redo = () => {
 }
 
 // 键盘快捷键
-const handleKeyDown = (event) => {
-  if (event.ctrlKey || event.metaKey) {
-    switch (event.key) {
-      case 'b':
-        event.preventDefault()
-        insertBold()
-        break
-      case 'i':
-        event.preventDefault()
-        insertItalic()
-        break
-      case 'k':
-        event.preventDefault()
-        insertLink()
-        break
-      case 'e':
-        event.preventDefault()
-        insertInlineCode()
-        break
-      case 's':
-        event.preventDefault()
-        if (hasChanges.value) {
-          saveChanges()
-        }
-        break
-      case 'z':
-        event.preventDefault()
-        if (event.shiftKey) {
-          redo()
-        } else {
-          undo()
-        }
-        break
-      case 'y':
-        event.preventDefault()
-        redo()
-        break
-    }
-  }
-  
-  if (event.key === 'Tab') {
+const viewerHandleKeyDown = (event) => {
+  if (event.ctrlKey && event.key === 'f') {
     event.preventDefault()
-    insertAtCursor('  ', '', '')
+    openInPageSearch()
+  }
+  if (event.key === 'Escape' && showInPageSearch.value) {
+    event.preventDefault()
+    closeInPageSearch()
+  }
+}
+
+const handleKeyDown = (event) => {
+  if (isEditing.value) {
+    // 编辑模式下的快捷键
+    if (event.ctrlKey || event.metaKey) {
+      switch (event.key) {
+        case 'b':
+          event.preventDefault()
+          insertBold()
+          break
+        case 'i':
+          event.preventDefault()
+          insertItalic()
+          break
+        case 'k':
+          event.preventDefault()
+          insertLink()
+          break
+        case 'e':
+          event.preventDefault()
+          insertInlineCode()
+          break
+        case 's':
+          event.preventDefault()
+          if (hasChanges.value) {
+            saveChanges()
+          }
+          break
+        case 'z':
+          event.preventDefault()
+          if (event.shiftKey) {
+            redo()
+          } else {
+            undo()
+          }
+          break
+        case 'y':
+          event.preventDefault()
+          redo()
+          break
+      }
+    }
+    
+    if (event.key === 'Tab') {
+      event.preventDefault()
+      insertAtCursor('  ', '', '')
+    }
+  } else {
+    // 查看模式下的快捷键
+    viewerHandleKeyDown(event)
   }
 }
 
@@ -704,6 +834,89 @@ onUnmounted(() => {
   color: var(--text-muted);
   font-weight: 500;
 }
+
+/* 页内搜索样式 */
+.in-page-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-secondary);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--bg-tertiary);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.in-page-search-input {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.search-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-results-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 0 8px;
+}
+
+.search-nav-btn, .close-search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.search-nav-btn:hover, .close-search-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.search-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+:deep(.search-highlight) {
+  background-color: var(--accent-primary-alpha);
+  color: var(--accent-primary-text);
+  border-radius: var(--radius-sm);
+  padding: 1px 2px;
+  transition: background-color 0.3s;
+}
+
+:deep(.search-highlight.active) {
+  background-color: var(--accent-primary);
+  color: white;
+  box-shadow: 0 0 8px var(--accent-primary-alpha);
+}
+
 
 .viewer-content {
   padding: 32px;

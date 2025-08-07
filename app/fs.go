@@ -23,6 +23,13 @@ type Diary struct {
 	Tags      []string  `json:"tags"`
 }
 
+// SearchResult represents a search result with context
+type SearchResult struct {
+	Diary           Diary    `json:"diary"`
+	MatchedSnippets []string `json:"matchedSnippets"`
+	MatchType       string   `json:"matchType"` // "title" or "content" or "both"
+}
+
 // FileInfo represents information about an uploaded file
 type FileInfo struct {
 	Name string `json:"name"`
@@ -147,4 +154,121 @@ func IsFileTypeSupported(fileType string) bool {
 		}
 	}
 	return false
+}
+
+// SearchDiaries searches for diaries by a query string in title and content
+func SearchDiaries(query string) ([]Diary, error) {
+	allDiaries, err := GetDiariesList()
+	if err != nil {
+		return nil, err
+	}
+
+	var matchedDiaries []Diary
+	lowerCaseQuery := strings.ToLower(query)
+
+	for _, diary := range allDiaries {
+		if strings.Contains(strings.ToLower(diary.Title), lowerCaseQuery) || strings.Contains(strings.ToLower(diary.Content), lowerCaseQuery) {
+			matchedDiaries = append(matchedDiaries, diary)
+		}
+	}
+
+	return matchedDiaries, nil
+}
+
+// SearchDiariesWithContext searches for diaries and returns detailed search results with context
+func SearchDiariesWithContext(query string) ([]SearchResult, error) {
+	if query == "" {
+		return []SearchResult{}, nil
+	}
+
+	allDiaries, err := GetDiariesList()
+	if err != nil {
+		return nil, err
+	}
+
+	var results []SearchResult
+	lowerCaseQuery := strings.ToLower(query)
+
+	for _, diary := range allDiaries {
+		titleMatch := strings.Contains(strings.ToLower(diary.Title), lowerCaseQuery)
+		contentMatch := strings.Contains(strings.ToLower(diary.Content), lowerCaseQuery)
+
+		if titleMatch || contentMatch {
+			result := SearchResult{
+				Diary:           diary,
+				MatchedSnippets: []string{},
+				MatchType:       "",
+			}
+
+			// 确定匹配类型
+			if titleMatch && contentMatch {
+				result.MatchType = "both"
+			} else if titleMatch {
+				result.MatchType = "title"
+			} else {
+				result.MatchType = "content"
+			}
+
+			// 提取匹配的内容片段
+			if contentMatch {
+				snippets := extractSnippets(diary.Content, query, 100) // 100字符上下文
+				result.MatchedSnippets = snippets
+			}
+
+			results = append(results, result)
+		}
+	}
+
+	return results, nil
+}
+
+// extractSnippets extracts text snippets around the matched query
+func extractSnippets(content, query string, contextLength int) []string {
+	lowerContent := strings.ToLower(content)
+	lowerQuery := strings.ToLower(query)
+
+	var snippets []string
+	start := 0
+
+	for {
+		index := strings.Index(lowerContent[start:], lowerQuery)
+		if index == -1 {
+			break
+		}
+
+		actualIndex := start + index
+
+		// 计算片段的开始和结束位置
+		snippetStart := actualIndex - contextLength
+		if snippetStart < 0 {
+			snippetStart = 0
+		}
+
+		snippetEnd := actualIndex + len(query) + contextLength
+		if snippetEnd > len(content) {
+			snippetEnd = len(content)
+		}
+
+		snippet := content[snippetStart:snippetEnd]
+
+		// 添加省略号
+		if snippetStart > 0 {
+			snippet = "..." + snippet
+		}
+		if snippetEnd < len(content) {
+			snippet = snippet + "..."
+		}
+
+		snippets = append(snippets, snippet)
+
+		// 移动到下一个可能的匹配位置
+		start = actualIndex + len(query)
+
+		// 限制返回的片段数量
+		if len(snippets) >= 3 {
+			break
+		}
+	}
+
+	return snippets
 }

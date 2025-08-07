@@ -18,6 +18,14 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function SearchDiaries(arg1) {
+  return window['go']['main']['App']['SearchDiaries'](arg1);
+}
+
+export function SearchDiariesWithContext(arg1) {
+  return window['go']['main']['App']['SearchDiariesWithContext'](arg1);
+}
+
 export function UpdateDiary(arg1) {
   return window['go']['main']['App']['UpdateDiary'](arg1);
 }

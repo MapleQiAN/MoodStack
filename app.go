@@ -138,3 +138,13 @@ func (a *App) UpdateDiary(diary app.Diary) error {
 func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
+
+// SearchDiaries searches for diaries by a query string
+func (a *App) SearchDiaries(query string) ([]app.Diary, error) {
+	return app.SearchDiaries(query)
+}
+
+// SearchDiariesWithContext searches for diaries and returns detailed search results with context
+func (a *App) SearchDiariesWithContext(query string) ([]app.SearchResult, error) {
+	return app.SearchDiariesWithContext(query)
+}

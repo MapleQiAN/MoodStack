@@ -10,6 +10,10 @@ export function GetDiaryByID(arg1:string):Promise<app.Diary>;
 
 export function Greet(arg1:string):Promise<string>;
 
+export function SearchDiaries(arg1:string):Promise<Array<app.Diary>>;
+
+export function SearchDiariesWithContext(arg1:string):Promise<Array<app.SearchResult>>;
+
 export function UpdateDiary(arg1:app.Diary):Promise<void>;
 
 export function UploadDiary(arg1:string,arg2:Array<number>):Promise<app.Diary>;

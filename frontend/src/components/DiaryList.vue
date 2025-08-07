@@ -6,6 +6,8 @@
         <p class="page-description">共 {{ diaries.length }} 篇日记记录</p>
       </div>
       
+
+      
       <div class="add-diary-dropdown" :class="{ open: showDropdown }">
         <button @click="toggleDropdown" class="dropdown-trigger" :disabled="isUploading">
           <span class="add-icon">
@@ -91,7 +93,7 @@
     
     <div v-else class="diary-grid">
       <div 
-        v-for="diary in sortedDiaries" 
+        v-for="diary in diaries" 
         :key="diary.id"
         class="diary-card"
         @click="$emit('view-diary', diary)"
@@ -129,7 +131,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { UploadDiary } from '../../wailsjs/go/main/App'
 
 const props = defineProps({
@@ -146,8 +148,7 @@ const selectedFile = ref(null)
 const isUploading = ref(false)
 const uploadError = ref('')
 const showDropdown = ref(false)
-
-const sortedDiaries = computed(() => {
+const filteredDiaries = computed(() => {
   return [...props.diaries].sort((a, b) => 
     new Date(b.createdAt) - new Date(a.createdAt)
   )
@@ -270,6 +271,8 @@ const getPreview = (content) => {
   return preview.length > 100 ? preview.substring(0, 100) + '...' : preview
 }
 
+
+
 // 点击外部关闭下拉菜单
 const handleClickOutside = (event) => {
   if (!event.target.closest('.add-diary-dropdown')) {
@@ -298,6 +301,8 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .header-content {
@@ -318,6 +323,8 @@ onUnmounted(() => {
   color: var(--text-muted);
   font-weight: 500;
 }
+
+
 
 /* 下拉菜单样式 */
 .add-diary-dropdown {
