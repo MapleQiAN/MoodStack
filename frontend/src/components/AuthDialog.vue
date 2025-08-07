@@ -6,20 +6,13 @@
         <h2 class="auth-title">
           {{ isSetupMode ? '初始化 MoodStack' : 'MoodStack' }}
         </h2>
-        <p class="auth-subtitle">
-          {{ isSetupMode ? '创建您的第一个账户来保护您的日记，账户仅保存于本地' : '请验证身份以访问您的加密日记' }}
+        <p class="auth-subtitle" v-if="isSetupMode">
+          创建您的第一个账户来保护您的日记，账户仅保存于本地
         </p>
-        
-        <!-- 模式切换按钮 -->
-        <div v-if="!forceSetupMode" class="mode-switch">
-          <button 
-            class="mode-switch-btn"
-            @click="toggleMode"
-            :disabled="loading"
-          >
-            {{ isSetupMode ? '已有账户？点击登录' : '还没有账户？点击注册' }}
-          </button>
-        </div>
+        <p class="auth-subtitle" v-else>
+          <span v-if="currentUser">欢迎回来，{{ currentUser.username }}！</span>
+          <span v-else>请验证身份以访问您的加密日记</span>
+        </p>
       </div>
 
       <div class="auth-dialog-content">
@@ -93,16 +86,15 @@
 
         <!-- 登录模式 -->
         <div v-else class="login-form">
-          <div class="form-group">
-            <label for="loginUsername">用户名</label>
-            <input
-              id="loginUsername"
-              type="text"
-              v-model="loginForm.username"
-              placeholder="输入用户名"
-              :disabled="loading"
-              @keyup.enter="handlePasswordLogin"
-            />
+          <div class="user-welcome" v-if="currentUser">
+            <div class="user-avatar">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <h3 class="user-name">{{ currentUser.username }}</h3>
+            <p class="user-greeting">选择您偏好的登录方式</p>
           </div>
           
           <div class="form-group">
@@ -141,21 +133,28 @@
               :disabled="loading || !isLoginFormValid"
             >
               <div v-if="loading" class="loading-spinner"></div>
-              <span v-else>密码登录</span>
+              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 12l2 2 4-4"/>
+                <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                <path d="M21 12h-3"/>
+                <path d="M6 12H3"/>
+              </svg>
+              <span>使用密码</span>
             </button>
             
             <button
-              v-if="biometricSupported"
-              class="auth-button secondary"
+              v-if="biometricSupported && currentUser && currentUser.biometricEnabled"
+              class="auth-button secondary biometric"
               @click="handleBiometricLogin"
-              :disabled="loading || !loginForm.username"
+              :disabled="loading"
             >
               <div v-if="biometricLoading" class="loading-spinner"></div>
               <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
                 <path d="M19 11c0 7-7 13-7 13s-7-6-7-13a7 7 0 0 1 14 0Z"/>
               </svg>
-              <span>生物识别</span>
+              <span>Windows Hello</span>
             </button>
           </div>
         </div>
@@ -257,7 +256,8 @@ import {
   CheckBiometricSupport,
   EnableBiometric,
   CheckMigrationStatus,
-  MigrateData
+  MigrateData,
+  GetFirstUser
 } from '../../wailsjs/go/main/App'
 
 const emit = defineEmits(['authenticated', 'close'])
@@ -284,9 +284,10 @@ const setupForm = ref({
 })
 
 const loginForm = ref({
-  username: '',
   password: ''
 })
+
+const currentUser = ref(null)
 
 const migrationInfo = ref({
   diaryCount: 0
@@ -300,7 +301,7 @@ const isSetupFormValid = computed(() => {
 })
 
 const isLoginFormValid = computed(() => {
-  return loginForm.value.username.trim() && loginForm.value.password.trim()
+  return loginForm.value.password.trim()
 })
 
 // Methods
@@ -351,13 +352,13 @@ const handleSetup = async () => {
 }
 
 const handlePasswordLogin = async () => {
-  if (!isLoginFormValid.value) return
+  if (!isLoginFormValid.value || !currentUser.value) return
   
   loading.value = true
   clearMessages()
   
   try {
-    const result = await AuthenticateUser(loginForm.value.username, loginForm.value.password)
+    const result = await AuthenticateUser(currentUser.value.username, loginForm.value.password)
     
     if (result.success) {
       showSuccess('登录成功！')
@@ -379,8 +380,8 @@ const handlePasswordLogin = async () => {
 }
 
 const handleBiometricLogin = async () => {
-  if (!loginForm.value.username.trim()) {
-    showError('请先输入用户名')
+  if (!currentUser.value) {
+    showError('无法获取用户信息')
     return
   }
   
@@ -388,11 +389,17 @@ const handleBiometricLogin = async () => {
   clearMessages()
   
   try {
-    const result = await AuthenticateWithBiometric(loginForm.value.username)
+    const result = await AuthenticateWithBiometric(currentUser.value.username)
     
     if (result.success) {
       showSuccess('生物识别认证成功！')
-      emit('authenticated', result.user)
+      
+      // Check migration after successful login
+      await checkMigration()
+      
+      if (!showMigrationNotice.value) {
+        emit('authenticated', result.user)
+      }
     } else {
       showError(result.message)
     }
@@ -484,8 +491,18 @@ const checkAuthStatus = async () => {
     
     if (requireSetup) {
       console.log('No users found, showing setup mode')
+      currentUser.value = null
     } else {
       console.log('Users exist, showing login mode')
+      // 获取第一个用户信息用于单用户模式
+      try {
+        const user = await GetFirstUser()
+        currentUser.value = user
+        console.log('Loaded user:', user.username)
+      } catch (error) {
+        console.error('获取用户信息失败:', error)
+        currentUser.value = null
+      }
     }
   } catch (error) {
     console.error('检查认证状态失败:', error)
@@ -494,26 +511,6 @@ const checkAuthStatus = async () => {
 }
 
 // 窗口控制方法已移除 - 登录界面不再需要窗口控制
-
-// 模式切换方法
-const toggleMode = () => {
-  if (forceSetupMode.value) return // 如果强制设置模式，则不允许切换
-  
-  isSetupMode.value = !isSetupMode.value
-  clearMessages()
-  
-  // 清空表单数据
-  setupForm.value = {
-    username: '',
-    password: '',
-    confirmPassword: ''
-  }
-  loginForm.value = {
-    username: '',
-    password: ''
-  }
-  showPassword.value = false
-}
 
 // Lifecycle
 onMounted(() => {
@@ -840,6 +837,54 @@ onMounted(() => {
   color: var(--text-muted);
   margin: 0;
   line-height: 1.4;
+}
+
+.user-welcome {
+  text-align: center;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.user-avatar {
+  margin: 0 auto 16px auto;
+  width: 48px;
+  height: 48px;
+  background: var(--accent-primary-alpha);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+}
+
+.user-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  letter-spacing: -0.01em;
+}
+
+.user-greeting {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.auth-button.biometric {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
+  color: white;
+  border: none;
+}
+
+.auth-button.biometric:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-primary-hover), var(--accent-primary));
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px var(--accent-primary-alpha);
 }
 
 @keyframes fadeIn {

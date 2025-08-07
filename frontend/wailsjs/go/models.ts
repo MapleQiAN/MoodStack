@@ -132,6 +132,24 @@ export namespace app {
 	        this.message = source["message"];
 	    }
 	}
+	export class BiometricTestResult {
+	    com_initialization: boolean;
+	    factory_access: boolean;
+	    api_available: boolean;
+	    error_message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new BiometricTestResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.com_initialization = source["com_initialization"];
+	        this.factory_access = source["factory_access"];
+	        this.api_available = source["api_available"];
+	        this.error_message = source["error_message"];
+	    }
+	}
 	export class Diary {
 	    id: string;
 	    title: string;

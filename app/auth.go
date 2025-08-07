@@ -181,3 +181,15 @@ func DeleteSession(sessionID string) error {
 func CleanupExpiredSessions() error {
 	return gormDB.Where("expires_at < ?", time.Now()).Delete(&Session{}).Error
 }
+
+// GetFirstUser returns the first user in the system for single-user mode
+func GetFirstUser() (*User, error) {
+	var user User
+	if err := gormDB.Order("id ASC").First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return nil, fmt.Errorf("failed to get first user: %v", err)
+	}
+	return &user, nil
+}

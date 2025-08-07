@@ -394,6 +394,16 @@ func (a *App) DisableBiometric() error {
 	return app.DisableBiometricForUser(a.currentUser.ID)
 }
 
+// TestBiometricAPI tests the Windows Hello API functionality
+func (a *App) TestBiometricAPI() (*app.BiometricTestResult, error) {
+	return app.TestBiometricAPI()
+}
+
+// GetFirstUser returns the first user for single-user mode
+func (a *App) GetFirstUser() (*app.User, error) {
+	return app.GetFirstUser()
+}
+
 // Migration methods
 
 // CheckMigrationStatus checks if data migration is needed

@@ -33,6 +33,8 @@ export function GetDiaryEncryptionInfo(arg1:string):Promise<app.DiaryEncryptionI
 
 export function GetDiaryWithPassword(arg1:string,arg2:string):Promise<app.Diary>;
 
+export function GetFirstUser():Promise<app.User>;
+
 export function Greet(arg1:string):Promise<string>;
 
 export function Logout():Promise<void>;
@@ -42,6 +44,8 @@ export function MigrateData():Promise<void>;
 export function SearchDiaries(arg1:string):Promise<Array<app.Diary>>;
 
 export function SearchDiariesWithContext(arg1:string):Promise<Array<app.SearchResult>>;
+
+export function TestBiometricAPI():Promise<app.BiometricTestResult>;
 
 export function UpdateDiary(arg1:app.Diary):Promise<void>;
 

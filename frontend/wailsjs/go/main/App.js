@@ -62,6 +62,10 @@ export function GetDiaryWithPassword(arg1, arg2) {
   return window['go']['main']['App']['GetDiaryWithPassword'](arg1, arg2);
 }
 
+export function GetFirstUser() {
+  return window['go']['main']['App']['GetFirstUser']();
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
@@ -80,6 +84,10 @@ export function SearchDiaries(arg1) {
 
 export function SearchDiariesWithContext(arg1) {
   return window['go']['main']['App']['SearchDiariesWithContext'](arg1);
+}
+
+export function TestBiometricAPI() {
+  return window['go']['main']['App']['TestBiometricAPI']();
 }
 
 export function UpdateDiary(arg1) {
