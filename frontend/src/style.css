@@ -44,6 +44,21 @@
   --accent-error: var(--nord11);
   --accent-info: var(--nord10);
   
+  /* Alpha variants */
+  --accent-primary-alpha: rgba(136, 192, 208, 0.2);
+  --success-alpha: rgba(163, 190, 140, 0.2);
+  --warning-alpha: rgba(235, 203, 139, 0.2);
+  
+  /* Secondary color names */
+  --success-primary: var(--nord14);
+  --warning-primary: var(--nord13);
+  
+  /* UI colors */
+  --border-color: var(--nord4);
+  --shadow-color: rgba(46, 52, 64, 0.1);
+  --text-disabled: rgba(46, 52, 64, 0.4);
+  --surface-hover: rgba(216, 222, 233, 0.5);
+  
   /* 背景渐变 */
   --bg-gradient: linear-gradient(135deg, #eceff4 0%, #e5e9f0 50%, #d8dee9 100%);
   
@@ -331,6 +346,21 @@ textarea:focus-visible {
   --accent-warning: #ebcb8b;
   --accent-error: #bf616a;
   --accent-info: #5e81ac;
+  
+  /* Alpha variants - dark mode */
+  --accent-primary-alpha: rgba(136, 192, 208, 0.3);
+  --success-alpha: rgba(163, 190, 140, 0.3);
+  --warning-alpha: rgba(235, 203, 139, 0.3);
+  
+  /* Secondary color names - dark mode */
+  --success-primary: #a3be8c;
+  --warning-primary: #ebcb8b;
+  
+  /* UI colors - dark mode */
+  --border-color: #4c566a;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --text-disabled: rgba(236, 239, 244, 0.4);
+  --surface-hover: rgba(76, 86, 106, 0.5);
   
   /* 背景渐变 - 夜间模式 */
   --bg-gradient: linear-gradient(135deg, #2e3440 0%, #3b4252 50%, #434c5e 100%);
