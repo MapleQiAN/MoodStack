@@ -15,6 +15,7 @@ const searchMode = ref(false)
 const searchResults = ref([])
 const searchLoading = ref(false)
 const showSearchResults = ref(false)
+const diaryViewerRef = ref(null)
 let searchTimeout = null
 
 // 新增状态管理
@@ -138,10 +139,20 @@ const handleSearchResultClick = async (result) => {
     searchMode.value = false
     showSearchResults.value = false
     
+    // 存储搜索关键词，传递给DiaryViewer组件
+    const searchTerm = searchQuery.value.trim()
+    
     // 清空搜索查询
     searchQuery.value = ''
     
-    // TODO: 如果有匹配的内容片段，可以在这里实现滚动到相应位置的逻辑
+    // 等待视图切换完成后，触发页内搜索并滚动到匹配位置
+    if (searchTerm && result.matchedSnippets && result.matchedSnippets.length > 0) {
+      await nextTick()
+      // 延迟一下确保DiaryViewer组件完全渲染
+      setTimeout(() => {
+        triggerViewerSearch(searchTerm)
+      }, 300)
+    }
   } catch (error) {
     console.error('打开日记失败:', error)
   }
@@ -266,6 +277,13 @@ const maximizeWindow = async () => {
 
 const closeWindow = () => {
   window.runtime.Quit()
+}
+
+// 触发DiaryViewer组件的搜索功能
+const triggerViewerSearch = (searchTerm) => {
+  if (diaryViewerRef.value && typeof diaryViewerRef.value.triggerInPageSearch === 'function') {
+    diaryViewerRef.value.triggerInPageSearch(searchTerm)
+  }
 }
 </script>
 
@@ -474,6 +492,7 @@ const closeWindow = () => {
           <DiaryViewer 
             v-else-if="currentView === 'viewer' && selectedDiary" 
             key="viewer"
+            ref="diaryViewerRef"
             :diary="selectedDiary"
             @back="showListView"
             @diary-updated="handleDiaryUpdated"

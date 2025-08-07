@@ -340,14 +340,29 @@ const performInPageSearch = () => {
 }
 
 const scrollToResult = (index) => {
-  const highlights = contentRef.value.querySelectorAll('.search-highlight')
+  const highlights = contentRef.value?.querySelectorAll('.search-highlight')
   if (highlights && highlights[index]) {
+    // 移除所有活动状态
     highlights.forEach(el => el.classList.remove('active'))
+    
+    // 添加当前活动状态
     highlights[index].classList.add('active')
+    
+    // 滚动到目标位置，使用更平滑的滚动效果
     highlights[index].scrollIntoView({
       behavior: 'smooth',
-      block: 'center'
+      block: 'center',
+      inline: 'nearest'
     })
+    
+    // 添加一个短暂的闪烁效果来突出显示找到的内容
+    highlights[index].style.transition = 'background-color 0.3s ease'
+    setTimeout(() => {
+      highlights[index].style.backgroundColor = 'var(--accent-primary)'
+      setTimeout(() => {
+        highlights[index].style.backgroundColor = ''
+      }, 200)
+    }, 100)
   }
 }
 
@@ -378,6 +393,26 @@ const closeInPageSearch = () => {
   const highlights = contentRef.value?.querySelectorAll('.search-highlight.active')
   if (highlights) {
     highlights.forEach(el => el.classList.remove('active'))
+  }
+}
+
+// 对外暴露的触发搜索方法
+const triggerInPageSearch = (searchTerm) => {
+  if (searchTerm && searchTerm.trim()) {
+    inPageSearchQuery.value = searchTerm.trim()
+    showInPageSearch.value = true
+    
+    // 等待DOM更新
+    nextTick(() => {
+      // 执行搜索并跳转到第一个结果
+      performInPageSearch()
+      
+      // 聚焦搜索输入框
+      const searchInput = document.querySelector('.in-page-search-input')
+      if (searchInput) {
+        searchInput.focus()
+      }
+    })
   }
 }
 
@@ -656,6 +691,11 @@ onUnmounted(() => {
   if (historyTimer) {
     clearTimeout(historyTimer)
   }
+})
+
+// 暴露方法给父组件
+defineExpose({
+  triggerInPageSearch
 })
 </script>
 
