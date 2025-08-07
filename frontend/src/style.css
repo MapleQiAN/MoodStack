@@ -28,7 +28,7 @@
   --bg-primary: var(--nord6);
   --bg-secondary: var(--nord5);
   --bg-tertiary: var(--nord4);
-  --bg-card: rgba(236, 239, 244, 0.9);
+  --bg-header: rgba(236, 239, 244, 0.85);
   --bg-glass: rgba(236, 239, 244, 0.8);
   --bg-glass-hover: rgba(236, 239, 244, 0.95);
   
@@ -106,22 +106,22 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--nord5);
+  background: var(--bg-secondary);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--nord3);
+  background: var(--text-muted);
   border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--nord2);
+  background: var(--text-tertiary);
 }
 
 ::-webkit-scrollbar-corner {
-  background: var(--nord5);
+  background: var(--bg-secondary);
 }
 
 /* Selection styling */
@@ -297,4 +297,48 @@ textarea:focus-visible {
   transform: translate3d(0, 0, 0);
   will-change: transform, opacity;
   backface-visibility: hidden;
+}
+
+/* 夜间模式支持 */
+[data-theme="dark"] {
+  /* 更新 Nord 配色系统为夜间模式 */
+  --nord0: #eceff4;  /* 文字颜色 */
+  --nord1: #d8dee9;  /* 次要文字 */
+  --nord2: #b8c0d0;  /* 第三级文字 */
+  --nord3: #88c0d0;  /* 静音文字 */
+  --nord4: #4c566a;  /* 边框/分割线 */
+  --nord5: #434c5e;  /* 背景-三级 */
+  --nord6: #3b4252;  /* 背景-二级 */
+  --nord7: #2e3440;  /* 主背景 */
+  
+  /* 语义化颜色 - 夜间模式 */
+  --bg-primary: #2e3440;
+  --bg-secondary: #3b4252;
+  --bg-tertiary: #434c5e;
+  --bg-header: rgba(46, 52, 64, 0.85);
+  --bg-card: rgba(59, 66, 82, 0.9);
+  --bg-glass: rgba(59, 66, 82, 0.8);
+  --bg-glass-hover: rgba(59, 66, 82, 0.95);
+  
+  --text-primary: #eceff4;
+  --text-secondary: #d8dee9;
+  --text-tertiary: #c9d1d9;
+  --text-muted: #88c0d0;
+  
+  --accent-primary: #88c0d0;
+  --accent-secondary: #81a1c1;
+  --accent-success: #a3be8c;
+  --accent-warning: #ebcb8b;
+  --accent-error: #bf616a;
+  --accent-info: #5e81ac;
+  
+  /* 背景渐变 - 夜间模式 */
+  --bg-gradient: linear-gradient(135deg, #2e3440 0%, #3b4252 50%, #434c5e 100%);
+  
+  /* 阴影系统 - 夜间模式 */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 }

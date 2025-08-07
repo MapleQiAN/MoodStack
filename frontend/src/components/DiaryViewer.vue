@@ -544,9 +544,9 @@ onUnmounted(() => {
   top: 0;
   z-index: 1000;
   padding: 16px 32px;
-  background: rgba(236, 239, 244, 0.95);
+  background: var(--bg-header);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--nord4);
+  border-bottom: 1px solid var(--bg-tertiary);
   box-shadow: var(--shadow-sm);
   width: 100%;
   box-sizing: border-box;
@@ -584,9 +584,9 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: var(--nord5);
+  background: var(--bg-secondary);
   color: var(--text-secondary);
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
   border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: 500;
@@ -595,7 +595,7 @@ onUnmounted(() => {
 }
 
 .back-button:hover {
-  background: var(--nord4);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
@@ -641,7 +641,7 @@ onUnmounted(() => {
 
 .cancel-button, .save-button {
   padding: 8px 16px;
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
   border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: 500;
@@ -650,12 +650,12 @@ onUnmounted(() => {
 }
 
 .cancel-button {
-  background: var(--nord5);
+  background: var(--bg-secondary);
   color: var(--text-secondary);
 }
 
 .cancel-button:hover {
-  background: var(--nord4);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
 }
 
@@ -690,8 +690,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: var(--nord5);
-  border: 1px solid var(--nord4);
+  background: var(--bg-secondary);
+  border: 1px solid var(--bg-tertiary);
   border-radius: var(--radius-md);
   font-size: 13px;
 }
@@ -717,7 +717,7 @@ onUnmounted(() => {
 
 .article-header {
   padding: 32px 0 24px 0;
-  border-bottom: 1px solid var(--nord4);
+  border-bottom: 1px solid var(--bg-tertiary);
   margin-bottom: 32px;
 }
 
@@ -752,7 +752,7 @@ onUnmounted(() => {
   color: var(--text-primary);
   margin: 32px 0 16px 0;
   padding-bottom: 12px;
-  border-bottom: 2px solid var(--nord4);
+  border-bottom: 2px solid var(--bg-tertiary);
   letter-spacing: -0.025em;
   font-family: var(--font-display);
 }
@@ -790,7 +790,7 @@ onUnmounted(() => {
 
 :deep(.markdown-content blockquote) {
   border-left: 4px solid var(--accent-primary);
-  background: var(--nord5);
+  background: var(--bg-secondary);
   padding: 16px 20px;
   margin: 20px 0;
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
@@ -799,13 +799,13 @@ onUnmounted(() => {
 }
 
 :deep(.markdown-content code) {
-  background: var(--nord5);
+  background: var(--bg-secondary);
   color: var(--text-primary);
   padding: 3px 6px;
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 14px;
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
   font-weight: 500;
 }
 
@@ -836,21 +836,21 @@ onUnmounted(() => {
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
 }
 
 :deep(.markdown-content th) {
-  background: var(--nord5);
+  background: var(--bg-secondary);
   color: var(--text-primary);
   padding: 16px;
   text-align: left;
   font-weight: 600;
-  border-bottom: 1px solid var(--nord4);
+  border-bottom: 1px solid var(--bg-tertiary);
 }
 
 :deep(.markdown-content td) {
   padding: 14px 16px;
-  border-bottom: 1px solid var(--nord4);
+  border-bottom: 1px solid var(--bg-tertiary);
   color: var(--text-secondary);
 }
 
@@ -887,7 +887,7 @@ onUnmounted(() => {
   border-radius: var(--radius-md);
   margin: 20px 0;
   box-shadow: var(--shadow-md);
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
 }
 
 :deep(.markdown-content strong) {
@@ -1014,7 +1014,7 @@ onUnmounted(() => {
 
 .title-section {
   padding: 24px 0;
-  border-bottom: 1px solid var(--nord4);
+  border-bottom: 1px solid var(--bg-tertiary);
   margin-bottom: 24px;
 }
 
@@ -1046,7 +1046,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 12px 0;
-  border-bottom: 1px solid var(--nord4);
+  border-bottom: 1px solid var(--bg-tertiary);
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
@@ -1060,7 +1060,7 @@ onUnmounted(() => {
 .toolbar-divider {
   width: 1px;
   height: 24px;
-  background: var(--nord4);
+  background: var(--bg-tertiary);
   margin: 0 4px;
 }
 
@@ -1081,7 +1081,7 @@ onUnmounted(() => {
 }
 
 .toolbar-btn:hover {
-  background: var(--nord4);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
 }
 
@@ -1105,7 +1105,7 @@ onUnmounted(() => {
 
 .preview-pane {
   flex: 1;
-  border-left: 1px solid var(--nord4);
+  border-left: 1px solid var(--bg-tertiary);
   background: var(--nord6);
   overflow-y: auto;
 }
@@ -1144,7 +1144,7 @@ onUnmounted(() => {
   
   .preview-pane {
     border-left: none;
-    border-top: 1px solid var(--nord4);
+    border-top: 1px solid var(--bg-tertiary);
     max-height: 300px;
   }
   

@@ -371,7 +371,7 @@ onUnmounted(() => {
   right: 0;
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
@@ -394,11 +394,11 @@ onUnmounted(() => {
 }
 
 .dropdown-item:hover {
-  background: var(--nord5);
+  background: var(--bg-secondary);
 }
 
 .dropdown-item:not(:last-child) {
-  border-bottom: 1px solid var(--nord4);
+  border-bottom: 1px solid var(--bg-tertiary);
 }
 
 .item-icon {
@@ -452,7 +452,7 @@ onUnmounted(() => {
   transform: translate(-50%, -50%);
   width: 120px;
   height: 120px;
-  border: 2px solid var(--nord4);
+  border: 2px solid var(--bg-tertiary);
   border-radius: 50%;
   z-index: 1;
   opacity: 0.3;
@@ -526,7 +526,7 @@ onUnmounted(() => {
   padding: 24px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
@@ -565,23 +565,23 @@ onUnmounted(() => {
 .diary-badge {
   width: 40px;
   height: 40px;
-  background: var(--nord5);
+  background: var(--bg-secondary);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--accent-primary);
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
 }
 
 .diary-date {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 600;
-  background: var(--nord5);
+  background: var(--bg-secondary);
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
 }
 
 .edit-btn {
@@ -646,7 +646,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding-top: 16px;
-  border-top: 1px solid var(--nord4);
+  border-top: 1px solid var(--bg-tertiary);
 }
 
 .file-info {
@@ -657,10 +657,10 @@ onUnmounted(() => {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
-  background: var(--nord5);
+  background: var(--bg-secondary);
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
   display: inline-block;
 }
 

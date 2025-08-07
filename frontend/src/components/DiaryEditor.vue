@@ -485,7 +485,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 24px 32px;
-  border-bottom: 1px solid var(--nord4);
+  border-bottom: 1px solid var(--bg-tertiary);
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
 }
@@ -502,7 +502,7 @@ onUnmounted(() => {
   gap: 8px;
   padding: 8px 16px;
   background: transparent;
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   cursor: pointer;
@@ -511,7 +511,7 @@ onUnmounted(() => {
 }
 
 .back-button:hover {
-  background: var(--nord5);
+  background: var(--bg-secondary);
   color: var(--text-primary);
 }
 
@@ -604,7 +604,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 0;
-  border-bottom: 1px solid var(--nord4);
+  border-bottom: 1px solid var(--bg-tertiary);
   margin-bottom: 16px;
   flex-wrap: wrap;
   gap: 16px;
@@ -622,10 +622,10 @@ onUnmounted(() => {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
-  background: var(--nord5);
+  background: var(--bg-secondary);
   padding: 6px 12px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
 }
 
 .toolbar-group {
@@ -640,7 +640,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
@@ -648,7 +648,7 @@ onUnmounted(() => {
 }
 
 .toolbar-btn:hover {
-  background: var(--nord5);
+  background: var(--bg-secondary);
   color: var(--text-primary);
 }
 
@@ -688,7 +688,7 @@ onUnmounted(() => {
   color: var(--text-primary);
   outline: none;
   resize: none;
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
   transition: border-color 0.2s ease;
 }
 
@@ -706,7 +706,7 @@ onUnmounted(() => {
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
   border-radius: var(--radius-md);
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
   overflow: hidden;
 }
 
@@ -752,7 +752,7 @@ onUnmounted(() => {
 }
 
 .preview-content code {
-  background: var(--nord4);
+  background: var(--bg-tertiary);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
@@ -781,7 +781,7 @@ onUnmounted(() => {
   margin: 16px 0;
   padding: 12px 16px;
   border-left: 4px solid var(--accent-primary);
-  background: var(--nord5);
+  background: var(--bg-secondary);
   color: var(--text-secondary);
   font-style: italic;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
@@ -793,7 +793,7 @@ onUnmounted(() => {
   background: var(--nord0);
   border-radius: var(--radius-md);
   overflow-x: auto;
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
 }
 
 .preview-content pre code {

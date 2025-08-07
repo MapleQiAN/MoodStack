@@ -252,10 +252,8 @@ const closeWindow = () => {
 /* 标题栏 */
 .titlebar {
   height: 48px;
-  -webkit-app-region: drag;
-  background: var(--bg-glass);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--nord4);
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--bg-tertiary);
   display: flex;
   align-items: center;
   position: relative;
@@ -268,14 +266,12 @@ const closeWindow = () => {
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  -webkit-app-region: drag;
 }
 
 .app-info {
   display: flex;
   align-items: center;
   gap: 12px;
-  -webkit-app-region: drag;
 }
 
 .sidebar-toggle, .theme-toggle {
@@ -290,11 +286,10 @@ const closeWindow = () => {
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  -webkit-app-region: no-drag;
 }
 
 .sidebar-toggle:hover, .theme-toggle:hover {
-  background: var(--nord5);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
 }
 
@@ -302,7 +297,6 @@ const closeWindow = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  -webkit-app-region: no-drag;
 }
 
 .app-title {
@@ -323,7 +317,6 @@ const closeWindow = () => {
 .window-controls {
   display: flex;
   gap: 8px;
-  -webkit-app-region: no-drag;
 }
 
 .control-btn {
@@ -341,7 +334,7 @@ const closeWindow = () => {
 }
 
 .control-btn:hover {
-  background: var(--nord4);
+  background: var(--bg-tertiary);
   color: var(--text-secondary);
   transform: scale(1.1);
 }
@@ -368,7 +361,7 @@ const closeWindow = () => {
   width: 280px;
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
-  border-right: 1px solid var(--nord4);
+  border-right: 1px solid var(--bg-tertiary);
   display: flex;
   flex-direction: column;
   padding: 24px 16px;
@@ -421,14 +414,14 @@ const closeWindow = () => {
 }
 
 .nav-item:hover {
-  background: var(--nord5);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
   transform: translateX(4px);
 }
 
 .nav-item.active {
   background: var(--accent-primary);
-  color: var(--nord0);
+  color: var(--bg-primary);
   font-weight: 600;
   transform: translateX(6px);
   box-shadow: var(--shadow-md);
@@ -443,10 +436,10 @@ const closeWindow = () => {
 }
 
 .stats {
-  background: var(--nord5);
+  background: var(--bg-secondary);
   border-radius: var(--radius-md);
   padding: 16px;
-  border: 1px solid var(--nord4);
+  border: 1px solid var(--bg-tertiary);
 }
 
 .stat-item {
@@ -490,7 +483,7 @@ const closeWindow = () => {
 .loading-spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid var(--nord4);
+  border: 3px solid var(--bg-tertiary);
   border-top: 3px solid var(--accent-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -583,7 +576,7 @@ const closeWindow = () => {
     height: auto;
     padding: 16px;
     border-right: none;
-    border-bottom: 1px solid var(--nord4);
+    border-bottom: 1px solid var(--bg-tertiary);
   }
   
   .navigation {
@@ -631,53 +624,3 @@ const closeWindow = () => {
 }
 </style>
 
-<style>
-/* 全局夜间模式支持 */
-:root {
-  /* 默认亮色主题 */
-  --bg-primary: #fafafa;
-  --bg-secondary: #ffffff;
-  --text-primary: #2e3440;
-  --text-secondary: #4c566a;
-  --text-muted: #5e81ac;
-  --border-color: #e5e9f0;
-  --accent-primary: #5e81ac;
-  --accent-secondary: #81a1c1;
-}
-
-[data-theme="dark"] {
-  /* 夜间模式 */
-  --bg-primary: #2e3440;
-  --bg-secondary: #3b4252;
-  --text-primary: #eceff4;
-  --text-secondary: #d8dee9;
-  --text-muted: #88c0d0;
-  --border-color: #4c566a;
-  --accent-primary: #88c0d0;
-  --accent-secondary: #81a1c1;
-  
-  /* 更新现有变量 */
-  --nord0: #2e3440;
-  --nord1: #3b4252;
-  --nord2: #434c5e;
-  --nord3: #4c566a;
-  --nord4: #5e81ac;
-  --nord5: #434c5e;
-  --nord6: #d8dee9;
-  --nord7: #e5e9f0;
-  --nord8: #eceff4;
-  --nord9: #8fbcbb;
-  --nord10: #88c0d0;
-  --nord11: #81a1c1;
-  --nord12: #5e81ac;
-  
-  /* 背景渐变 */
-  --bg-gradient: linear-gradient(135deg, #2e3440 0%, #3b4252 50%, #434c5e 100%);
-  --bg-glass: rgba(62, 68, 81, 0.85);
-}
-
-/* 添加切换动画 */
-* {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-</style>
