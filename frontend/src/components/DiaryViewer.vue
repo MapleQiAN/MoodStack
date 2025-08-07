@@ -89,7 +89,46 @@
     
     <!-- 查看模式 -->
     <div v-if="!isEditing" class="viewer-content" ref="contentRef">
-      <article class="article-container">
+      <!-- 需要密码解锁的日记 -->
+      <div v-if="needsPassword" class="password-unlock-container">
+        <div class="unlock-card">
+          <div class="unlock-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <circle cx="12" cy="16" r="1"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <h3>此日记需要密码解锁</h3>
+          <p>这篇日记使用了单独的密码进行加密，请输入密码以查看内容。</p>
+          
+          <div class="password-input-group">
+            <input 
+              type="password" 
+              v-model="unlockPassword"
+              placeholder="请输入密码"
+              class="unlock-password-input"
+              @keydown.enter="unlockDiary"
+              :disabled="isUnlocking"
+            />
+            <button 
+              @click="unlockDiary" 
+              :disabled="!unlockPassword || isUnlocking"
+              class="unlock-button"
+            >
+              <span v-if="!isUnlocking">解锁</span>
+              <span v-else>解锁中...</span>
+            </button>
+          </div>
+          
+          <div v-if="unlockError" class="unlock-error">
+            {{ unlockError }}
+          </div>
+        </div>
+      </div>
+      
+      <!-- 正常内容显示 -->
+      <article v-else class="article-container">
         <div class="article-body">
           <div class="markdown-content" v-html="highlightedRenderedContent"></div>
         </div>
@@ -221,7 +260,7 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { marked } from 'marked'
-import { UpdateDiary } from '../../wailsjs/go/main/App'
+import { UpdateDiary, GetDiaryWithPassword } from '../../wailsjs/go/main/App'
 
 const props = defineProps({
   diary: {
@@ -237,6 +276,12 @@ const isEditing = ref(false)
 const hasChanges = ref(false)
 const isSaving = ref(false)
 const showPreview = ref(false)
+
+// 密码解锁状态
+const needsPassword = ref(false)
+const unlockPassword = ref('')
+const isUnlocking = ref(false)
+const unlockError = ref('')
 
 // 编辑内容
 const editingTitle = ref('')
@@ -265,6 +310,13 @@ marked.setOptions({
 
 const renderedContent = computed(() => {
   if (!props.diary?.content) return ''
+  
+  // 检查是否需要密码解锁
+  if (props.diary.content === '[此日记需要单独密码解锁]') {
+    needsPassword.value = true
+    return ''
+  }
+  
   return marked.parse(props.diary.content)
 })
 
@@ -299,6 +351,29 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// 解锁日记
+const unlockDiary = async () => {
+  if (!unlockPassword.value) return
+  
+  try {
+    isUnlocking.value = true
+    unlockError.value = ''
+    
+    const unlockedDiary = await GetDiaryWithPassword(props.diary.id, unlockPassword.value)
+    
+    // 更新当前日记数据
+    Object.assign(props.diary, unlockedDiary)
+    needsPassword.value = false
+    unlockPassword.value = ''
+    
+  } catch (error) {
+    console.error('Unlock error:', error)
+    unlockError.value = error.message || '密码错误，请重试'
+  } finally {
+    isUnlocking.value = false
+  }
 }
 
 // 预览内容
@@ -1401,6 +1476,134 @@ defineExpose({
   
   .preview-content {
     padding: 20px 16px;
+  }
+}
+
+/* 密码解锁界面样式 */
+.unlock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.unlock-dialog {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--bg-tertiary);
+}
+
+.unlock-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.unlock-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.unlock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.unlock-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--bg-tertiary);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.unlock-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.unlock-error {
+  color: var(--error-color);
+  font-size: 14px;
+  text-align: center;
+  margin-top: -8px;
+}
+
+.unlock-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.unlock-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.unlock-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.unlock-btn.primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.unlock-btn.primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.unlock-btn.secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.unlock-btn.secondary:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

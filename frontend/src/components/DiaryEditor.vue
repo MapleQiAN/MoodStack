@@ -20,6 +20,19 @@
       
       <div class="header-actions">
         <button 
+          @click="showEncryptionSettings = !showEncryptionSettings" 
+          class="encryption-button"
+          :class="{ active: encryptionOptions.mode !== 'unified' }"
+          title="加密设置"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <circle cx="12" cy="16" r="1"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span>加密</span>
+        </button>
+        <button 
           @click="saveDiary" 
           :disabled="isSaving || !hasChanges"
           class="save-button"
@@ -30,6 +43,71 @@
       </div>
     </div>
     
+    <!-- 加密设置面板 -->
+    <div v-if="showEncryptionSettings" class="encryption-panel">
+      <div class="encryption-options">
+        <h3>加密设置</h3>
+        <div class="encryption-modes">
+          <label class="mode-option">
+            <input 
+              type="radio" 
+              value="unified" 
+              v-model="encryptionOptions.mode"
+              @change="onEncryptionModeChange"
+            />
+            <div class="mode-info">
+              <span class="mode-title">统一密码</span>
+              <span class="mode-desc">使用您的主密码加密</span>
+            </div>
+          </label>
+          
+          <label class="mode-option">
+            <input 
+              type="radio" 
+              value="individual" 
+              v-model="encryptionOptions.mode"
+              @change="onEncryptionModeChange"
+            />
+            <div class="mode-info">
+              <span class="mode-title">单独密码</span>
+              <span class="mode-desc">为此日记设置独立密码</span>
+            </div>
+          </label>
+          
+          <label class="mode-option">
+            <input 
+              type="radio" 
+              value="biometric" 
+              v-model="encryptionOptions.mode"
+              @change="onEncryptionModeChange"
+            />
+            <div class="mode-info">
+              <span class="mode-title">Windows Hello</span>
+              <span class="mode-desc">使用生物识别解锁</span>
+            </div>
+          </label>
+        </div>
+        
+        <div v-if="encryptionOptions.mode === 'individual'" class="individual-password">
+          <label for="individual-password">单独密码:</label>
+          <input 
+            id="individual-password"
+            type="password" 
+            v-model="encryptionOptions.individualPassword"
+            placeholder="请输入此日记的专用密码"
+            class="password-input"
+            @input="markAsChanged"
+          />
+        </div>
+        
+        <div class="encryption-actions">
+          <button @click="showEncryptionSettings = false" class="btn-secondary">
+            关闭
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="editor-content">
       <div class="title-input-wrapper">
         <input 
@@ -182,7 +260,7 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { CreateDiary, UpdateDiary } from '../../wailsjs/go/main/App'
+import { CreateDiary, UpdateDiary, CreateDiaryWithEncryption, UpdateDiaryWithEncryption } from '../../wailsjs/go/main/App'
 
 const props = defineProps({
   diary: {
@@ -206,6 +284,13 @@ const lastSaved = ref('')
 const showPreview = ref(false)
 const contentTextarea = ref(null)
 const previewContent = ref(null)
+
+// 加密相关
+const showEncryptionSettings = ref(false)
+const encryptionOptions = ref({
+  mode: 'unified', // 'unified', 'individual', 'biometric'
+  individualPassword: ''
+})
 
 // 监听props变化
 watch(() => props.diary, (newDiary) => {
@@ -248,9 +333,23 @@ const markAsChanged = () => {
   hasChanges.value = true
 }
 
+const onEncryptionModeChange = () => {
+  markAsChanged()
+  // 切换模式时清空单独密码
+  if (encryptionOptions.value.mode !== 'individual') {
+    encryptionOptions.value.individualPassword = ''
+  }
+}
+
 const saveDiary = async () => {
   if (!localDiary.value.title.trim() && !localDiary.value.content.trim()) {
     saveError.value = '请至少填写标题或内容'
+    return
+  }
+  
+  // 验证单独密码模式下的密码
+  if (encryptionOptions.value.mode === 'individual' && !encryptionOptions.value.individualPassword) {
+    saveError.value = '请输入单独密码'
     return
   }
   
@@ -260,15 +359,29 @@ const saveDiary = async () => {
     
     if (localDiary.value.id) {
       // 更新现有日记
-      await UpdateDiary(localDiary.value)
+      if (encryptionOptions.value.mode !== 'unified') {
+        await UpdateDiaryWithEncryption(localDiary.value, encryptionOptions.value)
+      } else {
+        await UpdateDiary(localDiary.value)
+      }
     } else {
       // 创建新日记
-      const result = await CreateDiary(localDiary.value.title, localDiary.value.content)
-      localDiary.value.id = result.id
+      if (encryptionOptions.value.mode !== 'unified') {
+        const result = await CreateDiaryWithEncryption(localDiary.value.title, localDiary.value.content, encryptionOptions.value)
+        localDiary.value.id = result.id
+      } else {
+        const result = await CreateDiary(localDiary.value.title, localDiary.value.content)
+        localDiary.value.id = result.id
+      }
     }
     
     hasChanges.value = false
     lastSaved.value = `最后保存于 ${new Date().toLocaleTimeString('zh-CN')}`
+    
+    // 保存成功后清空单独密码（避免在界面上保留敏感信息）
+    if (encryptionOptions.value.mode === 'individual') {
+      encryptionOptions.value.individualPassword = ''
+    }
     
     // 短暂延迟后触发保存成功事件
     setTimeout(() => {
@@ -532,6 +645,145 @@ onUnmounted(() => {
 .header-actions {
   display: flex;
   gap: 12px;
+}
+
+.encryption-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.encryption-button:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.encryption-button.active {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+/* 加密面板样式 */
+.encryption-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--bg-tertiary);
+  padding: 24px 32px;
+}
+
+.encryption-options h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.encryption-modes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-option:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+}
+
+.mode-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-primary);
+}
+
+.mode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mode-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.mode-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.individual-password {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.individual-password label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.password-input {
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.password-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.encryption-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-secondary {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 .save-button {

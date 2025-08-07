@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
-import { GetDiariesList, GetDiaryByID, SearchDiariesWithContext } from '../wailsjs/go/main/App'
+import { GetDiariesList, GetDiaryByID, SearchDiariesWithContext, CheckAuthStatus, Logout } from '../wailsjs/go/main/App'
 import DiaryList from './components/DiaryList.vue'
 import DiaryViewer from './components/DiaryViewer.vue'
 import DiaryEditor from './components/DiaryEditor.vue'
+import AuthDialog from './components/AuthDialog.vue'
+import SettingsDialog from './components/SettingsDialog.vue'
 
 const currentView = ref('list')
 const diaries = ref([])
@@ -22,6 +24,12 @@ let searchTimeout = null
 const sidebarCollapsed = ref(false)
 const isDarkMode = ref(false)
 const isWindowMaximized = ref(false)
+
+// 认证状态管理
+const isAuthenticated = ref(false)
+const currentUser = ref(null)
+const showAuthDialog = ref(false)
+const showSettingsDialog = ref(false)
 
 // 从本地存储恢复主题设置
 onMounted(async () => {
@@ -61,7 +69,8 @@ onMounted(async () => {
     })
   }
   
-  await loadDiaries()
+  // 检查认证状态
+  await checkAuthentication()
 })
 
 const focusSearch = () => {
@@ -285,6 +294,62 @@ const triggerViewerSearch = (searchTerm) => {
     diaryViewerRef.value.triggerInPageSearch(searchTerm)
   }
 }
+
+// 认证相关方法
+const checkAuthentication = async () => {
+  try {
+    const authStatus = await CheckAuthStatus()
+    
+    // 检查返回值类型以兼容新旧版本
+    if (typeof authStatus === 'boolean') {
+      // 旧版本兼容
+      if (authStatus) {
+        isAuthenticated.value = true
+        await loadDiaries()
+      } else {
+        showAuthDialog.value = true
+      }
+    } else if (authStatus && typeof authStatus === 'object') {
+      // 新版本
+      if (authStatus.isAuthenticated) {
+        isAuthenticated.value = true
+        await loadDiaries()
+      } else {
+        showAuthDialog.value = true
+      }
+    } else {
+      showAuthDialog.value = true
+    }
+  } catch (error) {
+    console.error('检查认证状态失败:', error)
+    showAuthDialog.value = true
+  }
+}
+
+const handleAuthenticated = async (user) => {
+  isAuthenticated.value = true
+  currentUser.value = user
+  showAuthDialog.value = false
+  await loadDiaries()
+}
+
+const handleLogout = async () => {
+  try {
+    await Logout()
+    isAuthenticated.value = false
+    currentUser.value = null
+    diaries.value = []
+    showAuthDialog.value = true
+  } catch (error) {
+    console.error('登出失败:', error)
+  }
+}
+
+const handleUserUpdated = () => {
+  // 当用户信息更新时，重新加载用户数据
+  // 这里可以添加更多的更新逻辑
+  console.log('用户信息已更新')
+}
 </script>
 
 <template>
@@ -395,6 +460,24 @@ const triggerViewerSearch = (searchTerm) => {
         </div>
 
         <div class="titlebar-actions">
+          <!-- 用户信息 -->
+          <div v-if="isAuthenticated && currentUser" class="user-info">
+            <span class="username">{{ currentUser.username }}</span>
+            <button class="user-btn" @click="showSettingsDialog = true" title="设置">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v6m0 6v6m6-12h-6m-6 0h6m-3-5.2a9 9 0 1 0 0 10.4m0-10.4a9 9 0 1 1 0 10.4"/>
+              </svg>
+            </button>
+            <button class="user-btn logout-btn" @click="handleLogout" title="登出">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16,17 21,12 16,7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+            </button>
+          </div>
+          
           <button class="theme-toggle" @click="toggleTheme" title="切换主题">
             <svg v-if="!isDarkMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="5"/>
@@ -442,8 +525,23 @@ const triggerViewerSearch = (searchTerm) => {
       </div>
     </div>
 
+    <!-- 认证对话框 -->
+    <AuthDialog 
+      v-if="showAuthDialog" 
+      @authenticated="handleAuthenticated"
+      @close="showAuthDialog = false"
+    />
+
+    <!-- 设置对话框 -->
+    <SettingsDialog
+      v-if="showSettingsDialog"
+      :visible="showSettingsDialog"
+      @close="showSettingsDialog = false"
+      @userUpdated="handleUserUpdated"
+    />
+
     <!-- 主布局 -->
-    <div class="main-layout">
+    <div v-if="isAuthenticated" class="main-layout">
       <!-- 左侧边栏 -->
       <aside :class="['sidebar', { collapsed: sidebarCollapsed }]">
         <nav class="navigation">
@@ -859,8 +957,48 @@ kbd {
 .titlebar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   -webkit-app-region: no-drag;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+}
+
+.username {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.user-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.user-btn.logout-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--accent-error);
 }
 
 .app-title {

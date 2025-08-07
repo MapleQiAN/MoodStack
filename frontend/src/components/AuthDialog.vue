@@ -1,0 +1,972 @@
+<template>
+  <div class="auth-overlay" v-if="visible">
+    <div class="auth-dialog" :class="{ 'setup-mode': isSetupMode }">
+      <!-- 自定义标题栏 -->
+      <div class="auth-titlebar">
+        <div class="auth-titlebar-content">
+          <div class="titlebar-drag-area"></div>
+          <div class="window-controls">
+            <button class="control-btn minimize" @click="minimizeWindow">
+              <svg width="12" height="1" viewBox="0 0 12 1" fill="currentColor">
+                <rect width="12" height="1" />
+              </svg>
+            </button>
+            <button class="control-btn maximize" @click="maximizeWindow">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1">
+                <rect x="1" y="1" width="10" height="10" />
+              </svg>
+            </button>
+            <button class="control-btn close" @click="closeWindow">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M2 2l8 8M10 2l-8 8" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-header">
+        <h2 class="auth-title">
+          {{ isSetupMode ? '初始化 MoodStack' : '解锁 MoodStack' }}
+        </h2>
+        <p class="auth-subtitle">
+          {{ isSetupMode ? '创建您的第一个账户来保护您的日记' : '请验证身份以访问您的加密日记' }}
+        </p>
+        
+        <!-- 模式切换按钮 -->
+        <div v-if="!forceSetupMode" class="mode-switch">
+          <button 
+            class="mode-switch-btn"
+            @click="toggleMode"
+            :disabled="loading"
+          >
+            {{ isSetupMode ? '已有账户？点击登录' : '还没有账户？点击注册' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="auth-dialog-content">
+        <div class="auth-content">
+          <!-- 设置模式 -->
+        <div v-if="isSetupMode" class="setup-form">
+          <div class="form-group">
+            <label for="username">用户名</label>
+            <input
+              id="username"
+              type="text"
+              v-model="setupForm.username"
+              placeholder="输入用户名"
+              :disabled="loading"
+              @keyup.enter="handleSetup"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="password">密码</label>
+            <div class="password-input">
+              <input
+                id="password"
+                :type="showPassword ? 'text' : 'password'"
+                v-model="setupForm.password"
+                placeholder="输入密码"
+                :disabled="loading"
+                @keyup.enter="handleSetup"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                @click="showPassword = !showPassword"
+                :disabled="loading"
+              >
+                <svg v-if="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="confirmPassword">确认密码</label>
+            <input
+              id="confirmPassword"
+              :type="showPassword ? 'text' : 'password'"
+              v-model="setupForm.confirmPassword"
+              placeholder="再次输入密码"
+              :disabled="loading"
+              @keyup.enter="handleSetup"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button
+              class="auth-button primary"
+              @click="handleSetup"
+              :disabled="loading || !isSetupFormValid"
+            >
+              <div v-if="loading" class="loading-spinner"></div>
+              <span v-else>创建账户</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 登录模式 -->
+        <div v-else class="login-form">
+          <div class="form-group">
+            <label for="loginUsername">用户名</label>
+            <input
+              id="loginUsername"
+              type="text"
+              v-model="loginForm.username"
+              placeholder="输入用户名"
+              :disabled="loading"
+              @keyup.enter="handlePasswordLogin"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="loginPassword">密码</label>
+            <div class="password-input">
+              <input
+                id="loginPassword"
+                :type="showPassword ? 'text' : 'password'"
+                v-model="loginForm.password"
+                placeholder="输入密码"
+                :disabled="loading"
+                @keyup.enter="handlePasswordLogin"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                @click="showPassword = !showPassword"
+                :disabled="loading"
+              >
+                <svg v-if="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              class="auth-button primary"
+              @click="handlePasswordLogin"
+              :disabled="loading || !isLoginFormValid"
+            >
+              <div v-if="loading" class="loading-spinner"></div>
+              <span v-else>密码登录</span>
+            </button>
+            
+            <button
+              v-if="biometricSupported"
+              class="auth-button secondary"
+              @click="handleBiometricLogin"
+              :disabled="loading || !loginForm.username"
+            >
+              <div v-if="biometricLoading" class="loading-spinner"></div>
+              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                <path d="M19 11c0 7-7 13-7 13s-7-6-7-13a7 7 0 0 1 14 0Z"/>
+              </svg>
+              <span>生物识别</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 错误消息 -->
+        <div v-if="errorMessage" class="error-message">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          {{ errorMessage }}
+        </div>
+
+        <!-- 成功消息 -->
+        <div v-if="successMessage" class="success-message">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22,4 12,14.01 9,11.01"/>
+          </svg>
+          {{ successMessage }}
+        </div>
+
+        <!-- 迁移提示 -->
+        <div v-if="showMigrationNotice" class="migration-notice">
+          <div class="migration-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7,10 12,15 17,10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </div>
+          <div class="migration-content">
+            <h4>检测到现有日记数据</h4>
+            <p>发现 {{ migrationInfo.diaryCount }} 篇未加密的日记，建议迁移到加密数据库以提高安全性。</p>
+            <button
+              class="migration-button"
+              @click="handleMigration"
+              :disabled="migrationLoading"
+            >
+              <div v-if="migrationLoading" class="loading-spinner"></div>
+              <span v-else>立即迁移</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 生物识别设置 -->
+      <div v-if="showBiometricSetup" class="biometric-setup">
+        <div class="biometric-header">
+          <h3>启用生物识别</h3>
+          <p>为了更便捷的登录体验，您可以启用Windows Hello生物识别认证</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="biometricPassword">请输入当前密码以启用生物识别</label>
+          <div class="password-input">
+            <input
+              id="biometricPassword"
+              type="password"
+              v-model="biometricPassword"
+              placeholder="输入密码"
+              :disabled="biometricLoading"
+              @keyup.enter="handleEnableBiometric"
+            />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button
+            class="auth-button secondary"
+            @click="showBiometricSetup = false"
+            :disabled="biometricLoading"
+          >
+            跳过
+          </button>
+          <button
+            class="auth-button primary"
+            @click="handleEnableBiometric"
+            :disabled="biometricLoading || !biometricPassword"
+          >
+            <div v-if="biometricLoading" class="loading-spinner"></div>
+            <span v-else>启用</span>
+          </button>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { 
+  CheckAuthStatus, 
+  CreateFirstUser, 
+  AuthenticateUser, 
+  AuthenticateWithBiometric,
+  CheckBiometricSupport,
+  EnableBiometric,
+  CheckMigrationStatus,
+  MigrateData
+} from '../../wailsjs/go/main/App'
+
+const emit = defineEmits(['authenticated', 'close'])
+
+const visible = ref(true)
+const loading = ref(false)
+const biometricLoading = ref(false)
+const migrationLoading = ref(false)
+const showPassword = ref(false)
+const isSetupMode = ref(false)
+const forceSetupMode = ref(false) // 强制设置模式，当没有用户时
+const biometricSupported = ref(false)
+const showBiometricSetup = ref(false)
+const showMigrationNotice = ref(false)
+
+const errorMessage = ref('')
+const successMessage = ref('')
+const biometricPassword = ref('')
+
+const setupForm = ref({
+  username: '',
+  password: '',
+  confirmPassword: ''
+})
+
+const loginForm = ref({
+  username: '',
+  password: ''
+})
+
+const migrationInfo = ref({
+  diaryCount: 0
+})
+
+// Computed properties
+const isSetupFormValid = computed(() => {
+  return setupForm.value.username.trim() && 
+         setupForm.value.password.length >= 6 && 
+         setupForm.value.password === setupForm.value.confirmPassword
+})
+
+const isLoginFormValid = computed(() => {
+  return loginForm.value.username.trim() && loginForm.value.password.trim()
+})
+
+// Methods
+const clearMessages = () => {
+  errorMessage.value = ''
+  successMessage.value = ''
+}
+
+const showError = (message) => {
+  clearMessages()
+  errorMessage.value = message
+}
+
+const showSuccess = (message) => {
+  clearMessages()
+  successMessage.value = message
+}
+
+const handleSetup = async () => {
+  if (!isSetupFormValid.value) return
+  
+  loading.value = true
+  clearMessages()
+  
+  try {
+    const result = await CreateFirstUser(setupForm.value.username, setupForm.value.password)
+    
+    if (result.success) {
+      showSuccess('账户创建成功！')
+      
+      // Check migration after successful setup
+      await checkMigration()
+      
+      // Check biometric support
+      if (biometricSupported.value) {
+        showBiometricSetup.value = true
+      } else {
+        emit('authenticated', result.user)
+      }
+    } else {
+      showError(result.message)
+    }
+  } catch (error) {
+    showError('创建账户失败: ' + error.message)
+  } finally {
+    loading.value = false
+  }
+}
+
+const handlePasswordLogin = async () => {
+  if (!isLoginFormValid.value) return
+  
+  loading.value = true
+  clearMessages()
+  
+  try {
+    const result = await AuthenticateUser(loginForm.value.username, loginForm.value.password)
+    
+    if (result.success) {
+      showSuccess('登录成功！')
+      
+      // Check migration after successful login
+      await checkMigration()
+      
+      if (!showMigrationNotice.value) {
+        emit('authenticated', result.user)
+      }
+    } else {
+      showError(result.message)
+    }
+  } catch (error) {
+    showError('登录失败: ' + error.message)
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleBiometricLogin = async () => {
+  if (!loginForm.value.username.trim()) {
+    showError('请先输入用户名')
+    return
+  }
+  
+  biometricLoading.value = true
+  clearMessages()
+  
+  try {
+    const result = await AuthenticateWithBiometric(loginForm.value.username)
+    
+    if (result.success) {
+      showSuccess('生物识别认证成功！')
+      emit('authenticated', result.user)
+    } else {
+      showError(result.message)
+    }
+  } catch (error) {
+    showError('生物识别认证失败: ' + error.message)
+  } finally {
+    biometricLoading.value = false
+  }
+}
+
+const handleEnableBiometric = async () => {
+  if (!biometricPassword.value) return
+  
+  biometricLoading.value = true
+  clearMessages()
+  
+  try {
+    await EnableBiometric(biometricPassword.value)
+    showSuccess('生物识别已启用！')
+    
+    setTimeout(() => {
+      showBiometricSetup.value = false
+      if (!showMigrationNotice.value) {
+        emit('authenticated')
+      }
+    }, 1500)
+  } catch (error) {
+    showError('启用生物识别失败: ' + error.message)
+  } finally {
+    biometricLoading.value = false
+  }
+}
+
+const handleMigration = async () => {
+  migrationLoading.value = true
+  clearMessages()
+  
+  try {
+    await MigrateData()
+    showSuccess('数据迁移完成！')
+    
+    setTimeout(() => {
+      showMigrationNotice.value = false
+      emit('authenticated')
+    }, 1500)
+  } catch (error) {
+    showError('数据迁移失败: ' + error.message)
+  } finally {
+    migrationLoading.value = false
+  }
+}
+
+const checkMigration = async () => {
+  try {
+    const status = await CheckMigrationStatus()
+    if (status.migrationNeeded && status.diaryCount > 0) {
+      migrationInfo.value = status
+      showMigrationNotice.value = true
+    }
+  } catch (error) {
+    console.error('检查迁移状态失败:', error)
+  }
+}
+
+const checkAuthStatus = async () => {
+  try {
+    const [authStatus, biometricInfo] = await Promise.all([
+      CheckAuthStatus(),
+      CheckBiometricSupport()
+    ])
+    
+    // 检查返回值类型以兼容新旧版本
+    let requireSetup = false
+    let hasUsers = true
+    
+    if (typeof authStatus === 'boolean') {
+      // 旧版本兼容 - 如果返回false，可能是需要初始化或需要登录
+      requireSetup = !authStatus
+      hasUsers = true // 假设有用户，让用户尝试登录
+    } else if (authStatus && typeof authStatus === 'object') {
+      // 新版本
+      requireSetup = authStatus.requireSetup
+      hasUsers = authStatus.hasUsers
+    }
+    
+    isSetupMode.value = requireSetup
+    forceSetupMode.value = requireSetup // 只有真正需要初始化时才强制设置模式
+    biometricSupported.value = biometricInfo.supported
+    
+    if (requireSetup) {
+      console.log('No users found, showing setup mode')
+    } else {
+      console.log('Users exist, showing login mode')
+    }
+  } catch (error) {
+    console.error('检查认证状态失败:', error)
+    showError('初始化失败: ' + error.message)
+  }
+}
+
+// 窗口控制方法
+const minimizeWindow = () => {
+  if (window.runtime && window.runtime.WindowMinimise) {
+    window.runtime.WindowMinimise()
+  }
+}
+
+const maximizeWindow = () => {
+  if (window.runtime && window.runtime.WindowToggleMaximise) {
+    window.runtime.WindowToggleMaximise()
+  }
+}
+
+const closeWindow = () => {
+  if (window.runtime && window.runtime.Quit) {
+    window.runtime.Quit()
+  }
+}
+
+// 模式切换方法
+const toggleMode = () => {
+  if (forceSetupMode.value) return // 如果强制设置模式，则不允许切换
+  
+  isSetupMode.value = !isSetupMode.value
+  clearMessages()
+  
+  // 清空表单数据
+  setupForm.value = {
+    username: '',
+    password: '',
+    confirmPassword: ''
+  }
+  loginForm.value = {
+    username: '',
+    password: ''
+  }
+  showPassword.value = false
+}
+
+// Lifecycle
+onMounted(() => {
+  checkAuthStatus()
+})
+</script>
+
+<style scoped>
+.auth-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.auth-dialog {
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  padding: 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  animation: slideUp 0.4s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-dialog-content {
+  padding: 32px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.auth-dialog.setup-mode {
+  max-width: 520px;
+}
+
+/* 自定义标题栏样式 */
+.auth-titlebar {
+  height: 40px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.auth-titlebar-content {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.titlebar-drag-area {
+  flex: 1;
+  height: 100%;
+  -webkit-app-region: drag;
+}
+
+.window-controls {
+  display: flex;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.control-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
+}
+
+.control-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.control-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  transform: scale(1.1);
+}
+
+.control-btn.close:hover {
+  background: var(--accent-error);
+  color: white;
+  transform: scale(1.1);
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.mode-switch {
+  margin-top: 16px;
+}
+
+.mode-switch-btn {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: all 0.2s ease;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mode-switch-btn:hover:not(:disabled) {
+  color: var(--accent-primary-hover);
+  text-decoration-color: var(--accent-primary-hover);
+}
+
+.mode-switch-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.auth-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.auth-content {
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  height: 44px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-primary-alpha);
+}
+
+.form-group input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.password-input {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.password-toggle:hover {
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+}
+
+.password-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.auth-button {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-button.primary {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.auth-button.primary:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+  transform: translateY(-1px);
+}
+
+.auth-button.secondary {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.auth-button.secondary:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.auth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.error-message,
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  margin-top: 16px;
+}
+
+.error-message {
+  background: var(--error-alpha);
+  color: var(--error-primary);
+  border: 1px solid var(--error-primary);
+}
+
+.success-message {
+  background: var(--success-alpha);
+  color: var(--success-primary);
+  border: 1px solid var(--success-primary);
+}
+
+.migration-notice {
+  background: var(--warning-alpha);
+  border: 1px solid var(--warning-primary);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.migration-icon {
+  color: var(--warning-primary);
+  flex-shrink: 0;
+}
+
+.migration-content h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warning-primary);
+}
+
+.migration-content p {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.migration-button {
+  background: var(--warning-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.migration-button:hover:not(:disabled) {
+  background: var(--warning-primary-hover);
+}
+
+.migration-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.biometric-setup {
+  border-top: 1px solid var(--border-color);
+  padding-top: 24px;
+  margin-top: 24px;
+}
+
+.biometric-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.biometric-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.biometric-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>
