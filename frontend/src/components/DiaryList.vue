@@ -1,12 +1,9 @@
 <template>
   <div class="list-container">
     <div class="list-header">
-            <div class="header-content">
+      <!-- 第一行：标题和新增按钮 -->
+      <div class="title-row">
         <h1 class="page-title">我的日记</h1>
-        <p class="page-description">共 {{ filteredDiaries.length }} 篇日记记录</p>
-      </div>
-    
-      <div class="header-actions">
         <div class="add-diary-dropdown" :class="{ open: showDropdown }">
           <button @click="toggleDropdown" class="dropdown-trigger" :disabled="isUploading">
           <span class="add-icon">
@@ -56,35 +53,31 @@
             </button>
           </div>
         </div>
+      </div>
+      
+      <!-- 第二行：描述和控件 -->
+      <div class="controls-row">
+        <p class="page-description">共 {{ filteredDiaries.length }} 篇日记记录</p>
+        
+        <div class="controls-section">
+          <div class="control-item sort-control" @click="toggleSortOrder">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 :style="{ transform: sortOrder === 'desc' ? 'rotate(0deg)' : 'rotate(180deg)' }">
+              <polyline points="6,9 12,15 18,9"/>
+            </svg>
+            <span class="control-text">{{ sortOrder === 'desc' ? '最新在前' : '最旧在前' }}</span>
+          </div>
 
-                 <input
-             ref="fileInput"
-             type="file"
-             accept=".txt,.md,.docx,.pdf"
-             @change="handleFileSelect"
-             style="display: none"
-         />
-         
-         <!-- 排序和筛选控件 -->
-         <div class="controls-section">
-           <div class="control-item sort-control" @click="toggleSortOrder">
-             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  :style="{ transform: sortOrder === 'desc' ? 'rotate(0deg)' : 'rotate(180deg)' }">
-               <polyline points="6,9 12,15 18,9"/>
-             </svg>
-             <span class="control-text">{{ sortOrder === 'desc' ? '最新在前' : '最旧在前' }}</span>
-           </div>
-
-           <div class="control-item date-control">
-             <div @click="showDatePicker = true" class="date-trigger">
-               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                 <line x1="16" y1="2" x2="16" y2="6"/>
-                 <line x1="8" y1="2" x2="8" y2="6"/>
-                 <line x1="3" y1="10" x2="21" y2="10"/>
-               </svg>
-               <span class="control-text">{{ selectedDate ? formatSelectedDateShort(selectedDate) : '选择日期' }}</span>
-             </div>
+          <div class="control-item date-control">
+            <div @click="showDatePicker = true" class="date-trigger">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <span class="control-text">{{ selectedDate ? formatSelectedDateShort(selectedDate) : '选择日期' }}</span>
+            </div>
 
              <!-- 自定义日期选择器 -->
              <div v-if="showDatePicker" class="custom-date-picker">
@@ -187,6 +180,15 @@
           </div>
         </div>
       </div>
+      
+      <!-- 隐藏的文件输入框 -->
+      <input
+        ref="fileInput"
+        type="file"
+        accept=".txt,.md,.docx,.pdf"
+        @change="handleFileSelect"
+        style="display: none"
+      />
     </div>
   </div>
 </template>
@@ -504,28 +506,30 @@ onUnmounted(() => {
 
 .list-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.header-actions {
-  display: flex;
   flex-direction: column;
   gap: 16px;
-  align-items: flex-end;
+  margin-bottom: 32px;
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .controls-section {
   display: flex;
   gap: 16px;
   align-items: center;
-}
-
-.header-content {
-  flex: 1;
 }
 
 .page-title {
@@ -927,7 +931,7 @@ onUnmounted(() => {
 
 .diary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: 1fr;
   gap: 24px;
 }
 
@@ -1091,14 +1095,28 @@ onUnmounted(() => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .list-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
+  .list-container {
+    padding: 20px;
   }
 
-  .header-actions {
-    align-items: center;
+  .list-header {
+    gap: 20px;
+  }
+
+  .title-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .controls-section {
+    justify-content: center;
   }
 
   .dropdown-menu {
@@ -1107,7 +1125,6 @@ onUnmounted(() => {
   }
 
   .diary-grid {
-    grid-template-columns: 1fr;
     gap: 16px;
   }
 
@@ -1125,12 +1142,21 @@ onUnmounted(() => {
 }
 
 @media (max-width: 480px) {
-  .header-actions {
-    align-items: center;
+  .list-container {
+    padding: 16px;
+  }
+
+  .title-row {
+    align-items: stretch;
+  }
+
+  .controls-row {
+    align-items: stretch;
   }
 
   .controls-section {
     justify-content: center;
+    flex-wrap: wrap;
   }
   
   .control-text {
