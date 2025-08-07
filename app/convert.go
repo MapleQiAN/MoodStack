@@ -1,7 +1,9 @@
 package app
 
 import (
+	"bytes"
 	"fmt"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -52,22 +54,32 @@ func ConvertTxtToMarkdown(content []byte) (string, error) {
 	return strings.Join(markdownLines, "\n"), nil
 }
 
-// ConvertDocxToMarkdown converts DOCX to markdown (simplified version)
-func ConvertDocxToMarkdown(content []byte) (string, error) {
-	// For MVP, we'll provide a placeholder
-	// In a full implementation, you would use a library like "github.com/nguyenthenguyen/docx"
-	return "# 从DOCX文件导入的内容\n\n*注意：完整的DOCX解析功能将在后续版本中实现*\n\n```\n" +
-		"原始文件内容需要专门的DOCX解析库来处理\n" +
-		"```", nil
+// pandocConvert is a helper function to call pandoc
+func pandocConvert(content []byte, from string, extraArgs ...string) (string, error) {
+	args := []string{"--from", from, "--to", "markdown"}
+	args = append(args, extraArgs...)
+	cmd := exec.Command("pandoc", args...)
+	cmd.Stdin = bytes.NewReader(content)
+	var out, stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("pandoc conversion from '%s' failed: %w. Stderr: %s", from, err, stderr.String())
+	}
+	return out.String(), nil
 }
 
-// ConvertPdfToMarkdown converts PDF to markdown (simplified version)
+// ConvertDocxToMarkdown converts DOCX to markdown using pandoc
+func ConvertDocxToMarkdown(content []byte) (string, error) {
+	return pandocConvert(content, "docx")
+}
+
+// ConvertPdfToMarkdown converts PDF to markdown using pandoc
 func ConvertPdfToMarkdown(content []byte) (string, error) {
-	// For MVP, we'll provide a placeholder
-	// In a full implementation, you would use a library like "github.com/ledongthuc/pdf"
-	return "# 从PDF文件导入的内容\n\n*注意：完整的PDF解析功能将在后续版本中实现*\n\n```\n" +
-		"原始文件内容需要专门的PDF解析库来处理\n" +
-		"```", nil
+	// Using --pdf-engine=pdflatex is often more reliable for PDF conversion
+	return pandocConvert(content, "pdf", "--pdf-engine=pdflatex")
 }
 
 // ExtractTitle extracts a title from content
