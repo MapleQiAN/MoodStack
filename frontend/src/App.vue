@@ -20,6 +20,7 @@ let searchTimeout = null
 // 新增状态管理
 const sidebarCollapsed = ref(false)
 const isDarkMode = ref(false)
+const isWindowMaximized = ref(false)
 
 // 从本地存储恢复主题设置
 onMounted(async () => {
@@ -32,6 +33,31 @@ onMounted(async () => {
   const savedSidebarState = localStorage.getItem('moodstack-sidebar-collapsed')
   if (savedSidebarState === 'true') {
     sidebarCollapsed.value = true
+  }
+  
+  // 监听窗口状态变化
+  if (window.runtime && window.runtime.EventsOn) {
+    // 尝试不同的事件名称
+    window.runtime.EventsOn('window-maximized', () => {
+      isWindowMaximized.value = true
+    })
+    
+    window.runtime.EventsOn('window-unmaximized', () => {
+      isWindowMaximized.value = false
+    })
+    
+    window.runtime.EventsOn('window-restored', () => {
+      isWindowMaximized.value = false
+    })
+    
+    // 也尝试原来的事件名称
+    window.runtime.EventsOn('window:maximized', () => {
+      isWindowMaximized.value = true
+    })
+    
+    window.runtime.EventsOn('window:unmaximized', () => {
+      isWindowMaximized.value = false
+    })
   }
   
   await loadDiaries()
@@ -222,8 +248,20 @@ const minimizeWindow = () => {
   window.runtime.WindowMinimise()
 }
 
-const maximizeWindow = () => {
-  window.runtime.WindowToggleMaximise()
+const maximizeWindow = async () => {
+  try {
+    // 先切换窗口状态
+    await window.runtime.WindowToggleMaximise()
+    
+    // 然后切换图标状态
+    isWindowMaximized.value = !isWindowMaximized.value
+    
+    console.log('Window maximized state:', isWindowMaximized.value)
+  } catch (error) {
+    console.error('Failed to toggle window:', error)
+    // 仍然切换图标状态作为备选方案
+    isWindowMaximized.value = !isWindowMaximized.value
+  }
 }
 
 const closeWindow = () => {
@@ -363,9 +401,18 @@ const closeWindow = () => {
               <rect width="12" height="1" />
             </svg>
           </button>
-          <button class="control-btn maximize" @click="maximizeWindow">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1">
+          <button class="control-btn maximize" @click="maximizeWindow" :title="isWindowMaximized ? '还原' : '最大化'">
+            <!-- 最大化图标 -->
+            <svg v-if="!isWindowMaximized" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1">
               <rect x="1" y="1" width="10" height="10" />
+            </svg>
+            <!-- 还原图标 -->
+            <svg v-else width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1">
+              <!-- 后面的窗口 -->
+              <rect x="3" y="1" width="7" height="7" />
+              <!-- 前面的窗口 -->
+              <rect x="1" y="3" width="7" height="7" fill="var(--bg-primary)" />
+              <rect x="1" y="3" width="7" height="7" />
             </svg>
           </button>
           <button class="control-btn close" @click="closeWindow">
