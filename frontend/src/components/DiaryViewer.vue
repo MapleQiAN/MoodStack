@@ -11,7 +11,7 @@
         <span>返回列表</span>
       </button>
 
-      <!-- 页内搜索栏 -->
+      <!-- 页内搜索栏或文章标题 -->
       <div v-if="showInPageSearch" class="in-page-search">
         <input
           type="text"
@@ -45,17 +45,12 @@
         </button>
       </div>
       
-      <div class="diary-meta" v-if="!showInPageSearch">
-        <div class="meta-item">
-          <span class="meta-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-          </span>
-          <span class="meta-text">{{ formatDate(diary.createdAt) }}</span>
+      <div v-else class="header-title-section">
+        <h1 class="header-title">{{ diary.title || '无标题' }}</h1>
+        <div class="diary-meta">
+          <div class="meta-item">
+            <span class="meta-text">{{ formatDate(diary.createdAt) }}</span>
+          </div>
         </div>
       </div>
       
@@ -95,10 +90,6 @@
     <!-- 查看模式 -->
     <div v-if="!isEditing" class="viewer-content" ref="contentRef">
       <article class="article-container">
-        <header class="article-header">
-          <h1 class="article-title">{{ diary.title }}</h1>
-        </header>
-        
         <div class="article-body">
           <div class="markdown-content" v-html="highlightedRenderedContent"></div>
         </div>
@@ -729,9 +720,32 @@ defineExpose({
   gap: 16px;
 }
 
+.header-title-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 60%;
+}
+
+.header-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
 .diary-meta {
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .meta-item {
@@ -843,37 +857,7 @@ defineExpose({
   cursor: not-allowed;
 }
 
-.diary-meta {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
-}
 
-.meta-group {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--bg-tertiary);
-  border-radius: var(--radius-md);
-  font-size: 13px;
-}
-
-.meta-icon {
-  color: var(--accent-primary);
-}
-
-.meta-text {
-  color: var(--text-muted);
-  font-weight: 500;
-}
 
 /* 页内搜索样式 */
 .in-page-search {
@@ -966,22 +950,6 @@ defineExpose({
 
 .article-container {
   padding: 0;
-}
-
-.article-header {
-  padding: 32px 0 24px 0;
-  border-bottom: 1px solid var(--bg-tertiary);
-  margin-bottom: 32px;
-}
-
-.article-title {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.3;
-  letter-spacing: -0.025em;
-  margin: 0;
 }
 
 .article-body {
@@ -1156,34 +1124,26 @@ defineExpose({
 /* 响应式设计 */
 @media (max-width: 768px) {
   .viewer-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-    padding: 20px;
+    padding: 16px 20px;
   }
   
-  .diary-meta {
-    justify-content: flex-start;
+  .header-top {
+    gap: 12px;
   }
   
-  .meta-group {
-    flex-direction: column;
-    gap: 8px;
+  .header-title-section {
+    max-width: 50%;
+  }
+  
+  .header-title {
+    font-size: 16px;
   }
   
   .meta-item {
-    align-self: flex-start;
+    font-size: 12px;
   }
   
-  .article-header {
-    padding: 24px 20px 20px 20px;
-  }
-  
-  .article-title {
-    font-size: 24px;
-  }
-  
-  .article-body {
+  .viewer-content {
     padding: 24px 20px;
   }
   
@@ -1207,19 +1167,27 @@ defineExpose({
 
 @media (max-width: 480px) {
   .viewer-header {
-    padding: 16px;
+    padding: 12px 16px;
   }
   
-  .article-header {
-    padding: 20px 16px 16px 16px;
+  .header-top {
+    gap: 8px;
   }
   
-  .article-title {
-    font-size: 22px;
-    line-height: 1.4;
+  .header-title-section {
+    max-width: 45%;
   }
   
-  .article-body {
+  .header-title {
+    font-size: 14px;
+  }
+  
+  .meta-item {
+    font-size: 11px;
+    gap: 4px;
+  }
+  
+  .viewer-content {
     padding: 20px 16px;
   }
   
