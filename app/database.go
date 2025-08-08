@@ -61,6 +61,7 @@ func AutoMigrateModels() error {
 		&EncryptedDiary{},
 		&Session{},
 		&AppSetting{},
+		&EmotionAnalysis{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to auto-migrate models: %v", err)

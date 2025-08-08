@@ -224,6 +224,106 @@ export namespace app {
 	        this.individualPassword = source["individualPassword"];
 	    }
 	}
+	export class EmotionAnalysis {
+	    id: string;
+	    diaryId: string;
+	    userId: number;
+	    joy: number;
+	    sadness: number;
+	    anger: number;
+	    fear: number;
+	    love: number;
+	    surprise: number;
+	    disgust: number;
+	    dominantEmotion: string;
+	    confidence: number;
+	    sentimentScore: number;
+	    sentimentLabel: string;
+	    analysisMethod: string;
+	    // Go type: time
+	    createdAt: any;
+	    // Go type: time
+	    updatedAt: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new EmotionAnalysis(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.diaryId = source["diaryId"];
+	        this.userId = source["userId"];
+	        this.joy = source["joy"];
+	        this.sadness = source["sadness"];
+	        this.anger = source["anger"];
+	        this.fear = source["fear"];
+	        this.love = source["love"];
+	        this.surprise = source["surprise"];
+	        this.disgust = source["disgust"];
+	        this.dominantEmotion = source["dominantEmotion"];
+	        this.confidence = source["confidence"];
+	        this.sentimentScore = source["sentimentScore"];
+	        this.sentimentLabel = source["sentimentLabel"];
+	        this.analysisMethod = source["analysisMethod"];
+	        this.createdAt = this.convertValues(source["createdAt"], null);
+	        this.updatedAt = this.convertValues(source["updatedAt"], null);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class EmotionAnalysisResult {
+	    joy: number;
+	    sadness: number;
+	    anger: number;
+	    fear: number;
+	    love: number;
+	    surprise: number;
+	    disgust: number;
+	    dominantEmotion: string;
+	    confidence: number;
+	    sentimentScore: number;
+	    sentimentLabel: string;
+	    keywords: string[];
+	    analysisMethod: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new EmotionAnalysisResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.joy = source["joy"];
+	        this.sadness = source["sadness"];
+	        this.anger = source["anger"];
+	        this.fear = source["fear"];
+	        this.love = source["love"];
+	        this.surprise = source["surprise"];
+	        this.disgust = source["disgust"];
+	        this.dominantEmotion = source["dominantEmotion"];
+	        this.confidence = source["confidence"];
+	        this.sentimentScore = source["sentimentScore"];
+	        this.sentimentLabel = source["sentimentLabel"];
+	        this.keywords = source["keywords"];
+	        this.analysisMethod = source["analysisMethod"];
+	    }
+	}
 	export class EncryptedDiary {
 	    id: string;
 	    userId: number;

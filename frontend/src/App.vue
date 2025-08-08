@@ -6,6 +6,7 @@ import DiaryViewer from './components/DiaryViewer.vue'
 import DiaryEditor from './components/DiaryEditor.vue'
 import AuthDialog from './components/AuthDialog.vue'
 import SettingsDialog from './components/SettingsDialog.vue'
+import EmotionAnalysis from './components/EmotionAnalysis.vue'
 
 const currentView = ref('list')
 const diaries = ref([])
@@ -235,6 +236,12 @@ const handleViewDiary = async (diary) => {
 
 const showListView = () => {
   currentView.value = 'list'
+  selectedDiary.value = null
+  editingDiary.value = null
+}
+
+const showAnalysisView = () => {
+  currentView.value = 'analysis'
   selectedDiary.value = null
   editingDiary.value = null
 }
@@ -558,6 +565,23 @@ const handleUserUpdated = () => {
             </span>
             <span class="nav-text" v-show="!sidebarCollapsed">我的日记</span>
           </button>
+          
+          <button 
+            @click="showAnalysisView" 
+            :class="['nav-item', { active: currentView === 'analysis' }]"
+            :title="sidebarCollapsed ? '情感分析' : ''"
+          >
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3v18h18"/>
+                <path d="M18 17l-3-3-3 3-5-5"/>
+                <circle cx="9" cy="9" r="1"/>
+                <circle cx="12" cy="6" r="1"/>
+                <circle cx="15" cy="3" r="1"/>
+              </svg>
+            </span>
+            <span class="nav-text" v-show="!sidebarCollapsed">情感分析</span>
+          </button>
         </nav>
         
         <div class="sidebar-footer" v-show="!sidebarCollapsed">
@@ -602,6 +626,11 @@ const handleUserUpdated = () => {
             :diary="editingDiary"
             @back="showListView"
             @diary-saved="handleDiarySaved"
+          />
+          
+          <EmotionAnalysis
+            v-else-if="currentView === 'analysis'"
+            key="analysis"
           />
         </Transition>
       </main>

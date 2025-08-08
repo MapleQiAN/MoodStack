@@ -3,6 +3,10 @@
 import {app} from '../models';
 import {main} from '../models';
 
+export function AnalyzeAllDiariesEmotion(arg1:boolean,arg2:string):Promise<Record<string, any>>;
+
+export function AnalyzeDiaryEmotion(arg1:string,arg2:boolean,arg3:string):Promise<app.EmotionAnalysisResult>;
+
 export function AuthenticateUser(arg1:string,arg2:string):Promise<app.AuthResult>;
 
 export function AuthenticateWithBiometric(arg1:string):Promise<app.AuthResult>;
@@ -29,11 +33,19 @@ export function GetDiariesList():Promise<Array<app.Diary>>;
 
 export function GetDiaryByID(arg1:string):Promise<app.Diary>;
 
+export function GetDiaryEmotionAnalysis(arg1:string):Promise<app.EmotionAnalysis>;
+
 export function GetDiaryEncryptionInfo(arg1:string):Promise<app.DiaryEncryptionInfo>;
 
 export function GetDiaryWithPassword(arg1:string,arg2:string):Promise<app.Diary>;
 
+export function GetEmotionAnalysisHistory():Promise<Array<app.EmotionAnalysis>>;
+
 export function GetFirstUser():Promise<app.User>;
+
+export function GetUserEmotionStatistics(arg1:number):Promise<Record<string, any>>;
+
+export function GetUserEmotionTrends(arg1:number):Promise<Array<app.EmotionAnalysis>>;
 
 export function Greet(arg1:string):Promise<string>;
 

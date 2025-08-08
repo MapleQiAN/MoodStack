@@ -93,3 +93,70 @@ func (EncryptedDiary) TableName() string {
 func (AppSetting) TableName() string {
 	return "app_settings"
 }
+
+// EmotionAnalysis represents emotion analysis for a diary entry
+type EmotionAnalysis struct {
+	ID      string `gorm:"primaryKey" json:"id"`
+	DiaryID string `gorm:"not null;index;uniqueIndex" json:"diaryId"`
+	UserID  uint   `gorm:"not null;index" json:"userId"`
+
+	// Emotion scores (0-1 scale)
+	Joy      float64 `json:"joy"`
+	Sadness  float64 `json:"sadness"`
+	Anger    float64 `json:"anger"`
+	Fear     float64 `json:"fear"`
+	Love     float64 `json:"love"`
+	Surprise float64 `json:"surprise"`
+	Disgust  float64 `json:"disgust"`
+
+	// Overall emotion
+	DominantEmotion string  `json:"dominantEmotion"`
+	Confidence      float64 `json:"confidence"`
+
+	// Sentiment analysis
+	SentimentScore float64 `json:"sentimentScore"` // -1 to 1 (negative to positive)
+	SentimentLabel string  `json:"sentimentLabel"` // "positive", "negative", "neutral"
+
+	// Keywords extracted from content
+	Keywords string `gorm:"type:text" json:"-"` // JSON array of keywords
+
+	// Analysis method used
+	AnalysisMethod string `gorm:"not null" json:"analysisMethod"` // "programmatic", "ai"
+
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+
+	// Associations
+	Diary EncryptedDiary `gorm:"foreignKey:DiaryID;references:ID" json:"-"`
+	User  User           `gorm:"foreignKey:UserID;references:ID" json:"-"`
+}
+
+// GetKeywords returns the keywords as a slice
+func (ea *EmotionAnalysis) GetKeywords() []string {
+	if ea.Keywords == "" {
+		return []string{}
+	}
+	var keywords []string
+	if err := json.Unmarshal([]byte(ea.Keywords), &keywords); err != nil {
+		return []string{}
+	}
+	return keywords
+}
+
+// SetKeywords sets the keywords from a slice
+func (ea *EmotionAnalysis) SetKeywords(keywords []string) error {
+	if keywords == nil {
+		keywords = []string{}
+	}
+	data, err := json.Marshal(keywords)
+	if err != nil {
+		return err
+	}
+	ea.Keywords = string(data)
+	return nil
+}
+
+// TableName overrides the table name for EmotionAnalysis
+func (EmotionAnalysis) TableName() string {
+	return "emotion_analyses"
+}

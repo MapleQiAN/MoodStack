@@ -260,7 +260,7 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { CreateDiary, UpdateDiary, CreateDiaryWithEncryption, UpdateDiaryWithEncryption } from '../../wailsjs/go/main/App'
+import { CreateDiary, UpdateDiary, CreateDiaryWithEncryption, UpdateDiaryWithEncryption, AnalyzeDiaryEmotion } from '../../wailsjs/go/main/App'
 
 const props = defineProps({
   diary: {
@@ -381,6 +381,14 @@ const saveDiary = async () => {
     // 保存成功后清空单独密码（避免在界面上保留敏感信息）
     if (encryptionOptions.value.mode === 'individual') {
       encryptionOptions.value.individualPassword = ''
+    }
+    
+    // 触发情感分析（异步进行，不影响保存流程）
+    try {
+      await AnalyzeDiaryEmotion(localDiary.value.id, false, 'http://localhost:11434')
+      console.log('情感分析已完成')
+    } catch (error) {
+      console.warn('情感分析失败，但不影响保存:', error)
     }
     
     // 短暂延迟后触发保存成功事件

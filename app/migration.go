@@ -110,6 +110,10 @@ func RunMigrations() error {
 		return fmt.Errorf("failed to add encryption mode columns: %v", err)
 	}
 
+	if err := addEmotionAnalysisTable(); err != nil {
+		return fmt.Errorf("failed to add emotion analysis table: %v", err)
+	}
+
 	return nil
 }
 
@@ -175,5 +179,67 @@ func addEncryptionModeColumns() error {
 		fmt.Println("Added encryption_salt column to encrypted_diaries table")
 	}
 
+	return nil
+}
+
+// addEmotionAnalysisTable creates the emotion_analyses table if it doesn't exist
+func addEmotionAnalysisTable() error {
+	// Check if table already exists
+	checkTableQuery := `SELECT name FROM sqlite_master WHERE type='table' AND name='emotion_analyses';`
+	var tableName string
+	err := db.QueryRow(checkTableQuery).Scan(&tableName)
+	if err == nil {
+		// Table already exists
+		return nil
+	}
+	if err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check table existence: %v", err)
+	}
+
+	// Create the table
+	createTableQuery := `
+		CREATE TABLE emotion_analyses (
+			id TEXT PRIMARY KEY,
+			diary_id TEXT NOT NULL,
+			user_id INTEGER NOT NULL,
+			joy REAL NOT NULL DEFAULT 0,
+			sadness REAL NOT NULL DEFAULT 0,
+			anger REAL NOT NULL DEFAULT 0,
+			fear REAL NOT NULL DEFAULT 0,
+			love REAL NOT NULL DEFAULT 0,
+			surprise REAL NOT NULL DEFAULT 0,
+			disgust REAL NOT NULL DEFAULT 0,
+			dominant_emotion TEXT NOT NULL,
+			confidence REAL NOT NULL DEFAULT 0,
+			sentiment_score REAL NOT NULL DEFAULT 0,
+			sentiment_label TEXT NOT NULL,
+			keywords TEXT,
+			analysis_method TEXT NOT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			UNIQUE(diary_id),
+			FOREIGN KEY (diary_id) REFERENCES encrypted_diaries(id),
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		);
+	`
+
+	if _, err := db.Exec(createTableQuery); err != nil {
+		return fmt.Errorf("failed to create emotion_analyses table: %v", err)
+	}
+
+	// Create indexes
+	indexQueries := []string{
+		`CREATE INDEX idx_emotion_analyses_diary_id ON emotion_analyses(diary_id);`,
+		`CREATE INDEX idx_emotion_analyses_user_id ON emotion_analyses(user_id);`,
+		`CREATE INDEX idx_emotion_analyses_created_at ON emotion_analyses(created_at);`,
+	}
+
+	for _, query := range indexQueries {
+		if _, err := db.Exec(query); err != nil {
+			fmt.Printf("Warning: failed to create index: %v\n", err)
+		}
+	}
+
+	fmt.Println("Created emotion_analyses table with indexes")
 	return nil
 }
