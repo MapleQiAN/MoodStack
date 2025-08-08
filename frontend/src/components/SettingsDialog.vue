@@ -293,8 +293,13 @@ const handleEnableBiometric = async () => {
     showMessage('生物识别已启用', 'success')
     showEnableBiometric.value = false
     biometricPassword.value = ''
-    await loadCurrentUser()
-    emit('userUpdated')
+    
+    // 立即更新本地用户状态
+    if (currentUser.value) {
+      currentUser.value.biometricEnabled = true
+    }
+    
+    emit('userUpdated', currentUser.value)
   } catch (error) {
     showMessage('启用生物识别失败: ' + error.message, 'error')
   } finally {
@@ -308,8 +313,13 @@ const handleDisableBiometric = async () => {
   try {
     await DisableBiometric()
     showMessage('生物识别已禁用', 'success')
-    await loadCurrentUser()
-    emit('userUpdated')
+    
+    // 立即更新本地用户状态
+    if (currentUser.value) {
+      currentUser.value.biometricEnabled = false
+    }
+    
+    emit('userUpdated', currentUser.value)
   } catch (error) {
     showMessage('禁用生物识别失败: ' + error.message, 'error')
   } finally {

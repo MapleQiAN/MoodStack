@@ -110,10 +110,6 @@ export function SearchDiariesWithContext(arg1) {
   return window['go']['main']['App']['SearchDiariesWithContext'](arg1);
 }
 
-export function TestBiometricAPI() {
-  return window['go']['main']['App']['TestBiometricAPI']();
-}
-
 export function UpdateDiary(arg1) {
   return window['go']['main']['App']['UpdateDiary'](arg1);
 }

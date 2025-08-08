@@ -57,8 +57,6 @@ export function SearchDiaries(arg1:string):Promise<Array<app.Diary>>;
 
 export function SearchDiariesWithContext(arg1:string):Promise<Array<app.SearchResult>>;
 
-export function TestBiometricAPI():Promise<app.BiometricTestResult>;
-
 export function UpdateDiary(arg1:app.Diary):Promise<void>;
 
 export function UpdateDiaryWithEncryption(arg1:app.Diary,arg2:app.DiaryEncryptionOptions):Promise<void>;

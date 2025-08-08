@@ -62,14 +62,16 @@
           
           <div class="form-group">
             <label for="confirmPassword">确认密码</label>
-            <input
-              id="confirmPassword"
-              :type="showPassword ? 'text' : 'password'"
-              v-model="setupForm.confirmPassword"
-              placeholder="再次输入密码"
-              :disabled="loading"
-              @keyup.enter="handleSetup"
-            />
+            <div class="password-input">
+              <input
+                id="confirmPassword"
+                :type="showPassword ? 'text' : 'password'"
+                v-model="setupForm.confirmPassword"
+                placeholder="再次输入密码"
+                :disabled="loading"
+                @keyup.enter="handleSetup"
+              />
+            </div>
           </div>
 
           <div class="form-actions">
@@ -93,8 +95,7 @@
                 <circle cx="12" cy="7" r="4"/>
               </svg>
             </div>
-            <h3 class="user-name">{{ currentUser.username }}</h3>
-            <p class="user-greeting">选择您偏好的登录方式</p>
+            <h3 class="user-name">欢迎回来，{{ currentUser.username }}！</h3>
           </div>
           
           <div class="form-group">
@@ -134,13 +135,11 @@
             >
               <div v-if="loading" class="loading-spinner"></div>
               <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 12l2 2 4-4"/>
-                <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
-                <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
-                <path d="M21 12h-3"/>
-                <path d="M6 12H3"/>
+                <rect x="3" y="11" width="18" height="10" rx="2" ry="2"/>
+                <circle cx="12" cy="16" r="1"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
-              <span>使用密码</span>
+              <span>密码登录</span>
             </button>
             
             <button
@@ -151,8 +150,10 @@
             >
               <div v-if="biometricLoading" class="loading-spinner"></div>
               <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                <path d="M19 11c0 7-7 13-7 13s-7-6-7-13a7 7 0 0 1 14 0Z"/>
+                <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4"/>
+                <path d="M5 19.5C5 14.5 8.5 11 12 11s7 3.5 7 8.5"/>
+                <path d="M8 16c0-2.5 2-4.5 4-4.5s4 2 4 4.5"/>
+                <path d="M12 18v3"/>
               </svg>
               <span>Windows Hello</span>
             </button>
@@ -876,15 +877,16 @@ onMounted(() => {
 }
 
 .auth-button.biometric {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
   color: white;
   border: none;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
 .auth-button.biometric:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-primary-hover), var(--accent-primary));
+  background: linear-gradient(135deg, #4338CA, #6D28D9);
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px var(--accent-primary-alpha);
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
 }
 
 @keyframes fadeIn {
