@@ -43,6 +43,8 @@
   --accent-warning: var(--nord13);
   --accent-error: var(--nord11);
   --accent-info: var(--nord10);
+  /* 主色在 hover/focus 时使用更深但同色系的蓝色（基于 #88c0d0 深化） */
+  --accent-primary-hover: #5aa5b9;
   
   /* Alpha variants */
   --accent-primary-alpha: rgba(136, 192, 208, 0.2);
@@ -346,6 +348,8 @@ textarea:focus-visible {
   --accent-warning: #ebcb8b;
   --accent-error: #bf616a;
   --accent-info: #5e81ac;
+  /* 夜间模式下保持同色系更深蓝 */
+  --accent-primary-hover: #5aa5b9;
   
   /* Alpha variants - dark mode */
   --accent-primary-alpha: rgba(136, 192, 208, 0.3);

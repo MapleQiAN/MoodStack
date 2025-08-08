@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
-import { GetDiariesList, GetDiaryByID, SearchDiariesWithContext, CheckAuthStatus, Logout } from '../wailsjs/go/main/App'
+import { GetDiariesList, GetDiaryByID, SearchDiariesWithContext, CheckAuthStatus, Logout, GetCurrentUser } from '../wailsjs/go/main/App'
 import DiaryList from './components/DiaryList.vue'
 import DiaryViewer from './components/DiaryViewer.vue'
 import DiaryEditor from './components/DiaryEditor.vue'
@@ -352,10 +352,22 @@ const handleLogout = async () => {
   }
 }
 
-const handleUserUpdated = () => {
+const handleUserUpdated = async (updatedUser = null) => {
   // 当用户信息更新时，重新加载用户数据
-  // 这里可以添加更多的更新逻辑
-  console.log('用户信息已更新')
+  if (updatedUser) {
+    // 如果传递了用户数据，直接使用
+    currentUser.value = updatedUser
+    console.log('用户信息已更新:', updatedUser)
+  } else {
+    // 否则从API获取
+    try {
+      const user = await GetCurrentUser()
+      currentUser.value = user
+      console.log('用户信息已更新:', user)
+    } catch (error) {
+      console.error('更新用户信息失败:', error)
+    }
+  }
 }
 </script>
 

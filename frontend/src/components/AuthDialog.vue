@@ -9,10 +9,7 @@
         <p class="auth-subtitle" v-if="isSetupMode">
           创建您的第一个账户来保护您的日记，账户仅保存于本地
         </p>
-        <p class="auth-subtitle" v-else>
-          <span v-if="currentUser">欢迎回来，{{ currentUser.username }}！</span>
-          <span v-else>请验证身份以访问您的加密日记</span>
-        </p>
+
       </div>
 
       <div class="auth-dialog-content">
@@ -43,6 +40,7 @@
                 @keyup.enter="handleSetup"
               />
               <button
+                v-if="setupForm.password"
                 type="button"
                 class="password-toggle"
                 @click="showPassword = !showPassword"
@@ -71,6 +69,22 @@
                 :disabled="loading"
                 @keyup.enter="handleSetup"
               />
+              <button
+                v-if="setupForm.confirmPassword"
+                type="button"
+                class="password-toggle"
+                @click="showPassword = !showPassword"
+                :disabled="loading"
+              >
+                <svg v-if="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -110,6 +124,7 @@
                 @keyup.enter="handlePasswordLogin"
               />
               <button
+                v-if="loginForm.password"
                 type="button"
                 class="password-toggle"
                 @click="showPassword = !showPassword"
@@ -142,20 +157,19 @@
               <span>密码登录</span>
             </button>
             
-            <button
+              <button
               v-if="biometricSupported && currentUser && currentUser.biometricEnabled"
               class="auth-button secondary biometric"
               @click="handleBiometricLogin"
               :disabled="loading"
             >
               <div v-if="biometricLoading" class="loading-spinner"></div>
-              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4"/>
-                <path d="M5 19.5C5 14.5 8.5 11 12 11s7 3.5 7 8.5"/>
-                <path d="M8 16c0-2.5 2-4.5 4-4.5s4 2 4 4.5"/>
-                <path d="M12 18v3"/>
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+                <circle cx="8.5" cy="9" r="1.5" fill="currentColor"/>
+                <circle cx="15.5" cy="9" r="1.5" fill="currentColor"/>
+                <path d="M7 14c1.9 2.2 4 3.5 5 3.5s3.1-1.3 5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              <span>Windows Hello</span>
+              <span>{{ biometricLoading ? '请注意弹出窗口' : 'Windows Hello' }}</span>
             </button>
           </div>
         </div>
@@ -238,7 +252,7 @@
             :disabled="biometricLoading || !biometricPassword"
           >
             <div v-if="biometricLoading" class="loading-spinner"></div>
-            <span v-else>启用</span>
+            <span>{{ biometricLoading ? '请注意弹出窗口' : '启用' }}</span>
           </button>
         </div>
         </div>
@@ -642,10 +656,16 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 
+.password-input input {
+  padding-right: 48px; /* 为眼睛图标留出空间 */
+}
+
 .form-group input:focus {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px var(--accent-primary-alpha);
+  z-index: 1;
+  position: relative;
 }
 
 .form-group input:disabled {
@@ -655,6 +675,21 @@ onMounted(() => {
 
 .password-input {
   position: relative;
+  max-width: 380px; /* 使密码框更窄 */
+  margin: 0 auto;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+/* 移除浏览器原生的密码显示按钮 */
+input[type="password"]::-ms-reveal {
+  display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none;
 }
 
 .password-toggle {
@@ -669,6 +704,7 @@ onMounted(() => {
   padding: 4px;
   border-radius: var(--radius-sm);
   transition: all 0.2s ease;
+  z-index: 2;
 }
 
 .password-toggle:hover {
@@ -708,9 +744,11 @@ onMounted(() => {
   color: white;
 }
 
-.auth-button.primary:hover:not(:disabled) {
+.auth-button.primary:hover:not(:disabled),
+.auth-button.primary:focus-visible:not(:disabled) {
   background: var(--accent-primary-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--accent-primary-alpha);
 }
 
 .auth-button.secondary {
@@ -877,16 +915,29 @@ onMounted(() => {
 }
 
 .auth-button.biometric {
-  background: linear-gradient(135deg, #4F46E5, #7C3AED);
-  color: white;
+  background: #ebcb8b;
+  color: var(--bg-primary);
   border: none;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 2px 8px rgba(235, 203, 139, 0.2);
 }
 
-.auth-button.biometric:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4338CA, #6D28D9);
+.auth-button.biometric:hover:not(:disabled),
+.auth-button.biometric:focus-visible:not(:disabled) {
+  background: #d9b15f;
+  color: var(--bg-primary);
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 4px 16px rgba(235, 203, 139, 0.3);
+}
+
+.auth-button.biometric svg {
+  color: currentColor;
+  stroke: currentColor;
+}
+
+.auth-button.biometric:hover:not(:disabled) svg,
+.auth-button.biometric:focus-visible:not(:disabled) svg {
+  color: currentColor;
+  stroke: currentColor;
 }
 
 @keyframes fadeIn {
