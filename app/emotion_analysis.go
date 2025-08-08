@@ -912,7 +912,7 @@ func hasModifierNear(words []string, position int, modifiers []string, distance 
 			continue
 		}
 		for _, modifier := range modifiers {
-			if strings.ToLower(words[i]) == strings.ToLower(modifier) {
+			if strings.EqualFold(words[i], modifier) {
 				return true
 			}
 		}
