@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- NativeAOT settings to produce a native DLL with exported symbols -->
+    <PublishAot>true</PublishAot>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StripSymbols>true</StripSymbols>
+    <IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    <DebuggerSupport>false</DebuggerSupport>
+    <EventSourceSupport>false</EventSourceSupport>
+    <StackTraceSupport>false</StackTraceSupport>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <TrimMode>partial</TrimMode>
+
+    <!-- Produce a native shared library (DLL) -->
+    <NativeLib>Shared</NativeLib>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- CsWinRT projection for WinRT APIs on .NET -->
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Ensure we target Windows 10+ APIs -->
+    <SupportedPlatform Include="windows10.0.19041.0" />
+  </ItemGroup>
+</Project>
+
