@@ -39,10 +39,24 @@ func (a *App) startup(ctx context.Context) {
 		fmt.Printf("Failed to create diaries directory: %v\n", err)
 	}
 
+	// Run database migrations
+	if err := app.RunMigrations(); err != nil {
+		fmt.Printf("Failed to run migrations: %v\n", err)
+	}
+
 	// Cleanup expired sessions on startup
 	if err := app.CleanupExpiredSessions(); err != nil {
 		fmt.Printf("Failed to cleanup expired sessions: %v\n", err)
 	}
+}
+
+// GetEmotionAnalysisHistory returns emotion analysis history for current user
+func (a *App) GetEmotionAnalysisHistory() ([]app.EmotionAnalysis, error) {
+	if a.currentUser == nil {
+		return nil, fmt.Errorf("user not authenticated")
+	}
+
+	return app.GetUserEmotionTrends(a.currentUser.ID, 0)
 }
 
 // GetDiariesList returns all diary entries
@@ -455,4 +469,98 @@ func (a *App) UpdateDiaryWithEncryption(diary app.Diary, encryptionOptions app.D
 
 	// Save with new encryption options
 	return app.SaveEncryptedDiaryWithOptions(&diary, a.currentUser.ID, a.encryptionKey, &encryptionOptions)
+}
+
+// Emotion Analysis methods
+
+// AnalyzeDiaryEmotion analyzes emotion for a specific diary
+func (a *App) AnalyzeDiaryEmotion(diaryID string, useAI bool, ollamaURL string) (*app.EmotionAnalysisResult, error) {
+	if a.currentUser == nil {
+		return nil, fmt.Errorf("用户未登录")
+	}
+
+	// Get the diary content
+	diary, err := app.GetEncryptedDiaryByID(diaryID, a.currentUser.ID, a.encryptionKey)
+	if err != nil {
+		return nil, fmt.Errorf("获取日记失败: %v", err)
+	}
+
+	// Analyze emotion
+	return app.AnalyzeDiaryEmotion(diaryID, a.currentUser.ID, diary.Content, useAI, ollamaURL)
+}
+
+// GetDiaryEmotionAnalysis gets existing emotion analysis for a diary
+func (a *App) GetDiaryEmotionAnalysis(diaryID string) (*app.EmotionAnalysis, error) {
+	if a.currentUser == nil {
+		return nil, fmt.Errorf("用户未登录")
+	}
+
+	return app.GetEmotionAnalysis(diaryID, a.currentUser.ID)
+}
+
+// GetUserEmotionTrends gets emotion trends for the current user
+func (a *App) GetUserEmotionTrends(days int) ([]app.EmotionAnalysis, error) {
+	if a.currentUser == nil {
+		return nil, fmt.Errorf("用户未登录")
+	}
+
+	return app.GetUserEmotionTrends(a.currentUser.ID, days)
+}
+
+// GetUserEmotionStatistics gets aggregated emotion statistics for the current user
+func (a *App) GetUserEmotionStatistics(days int) (map[string]interface{}, error) {
+	if a.currentUser == nil {
+		return nil, fmt.Errorf("用户未登录")
+	}
+
+	return app.GetEmotionStatistics(a.currentUser.ID, days)
+}
+
+// AnalyzeAllDiariesEmotion analyzes emotion for all user's diaries
+func (a *App) AnalyzeAllDiariesEmotion(useAI bool, ollamaURL string) (map[string]interface{}, error) {
+	if a.currentUser == nil {
+		return nil, fmt.Errorf("用户未登录")
+	}
+
+	// Get all diaries
+	diaries, err := app.GetEncryptedDiariesList(a.currentUser.ID, a.encryptionKey)
+	if err != nil {
+		return nil, fmt.Errorf("获取日记列表失败: %v", err)
+	}
+
+	successCount := 0
+	failureCount := 0
+	var lastError error
+
+	// Analyze each diary
+	for _, diary := range diaries {
+		// Skip if already analyzed (unless we're forcing re-analysis)
+		existing, err := app.GetEmotionAnalysis(diary.ID, a.currentUser.ID)
+		if err == nil && existing != nil {
+			successCount++
+			continue
+		}
+
+		// Analyze emotion
+		_, err = app.AnalyzeDiaryEmotion(diary.ID, a.currentUser.ID, diary.Content, useAI, ollamaURL)
+		if err != nil {
+			failureCount++
+			lastError = err
+		} else {
+			successCount++
+		}
+	}
+
+	result := map[string]interface{}{
+		"total":     len(diaries),
+		"success":   successCount,
+		"failures":  failureCount,
+		"completed": successCount == len(diaries),
+	}
+
+	if lastError != nil {
+		result["lastError"] = lastError.Error()
+	}
+
+	return result, nil
 }
