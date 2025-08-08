@@ -40,16 +40,27 @@ const selectedTimeRange = ref(30) // days
 const analysisMethod = ref('programmatic') // 'programmatic' or 'ai'
 const ollamaURL = ref('http://localhost:11434')
 const showSettings = ref(false)
+const rootEl = ref(null)
 
-// Emotion colors mapping
+const resolveCssVar = (name, fallback) => {
+  try {
+    const target = rootEl.value || document.documentElement
+    const val = getComputedStyle(target).getPropertyValue(name)
+    return val && val.trim().length > 0 ? val.trim() : fallback
+  } catch {
+    return fallback
+  }
+}
+
+// Emotion colors mapping - modern cohesive palette
 const emotionColors = {
-  joy: '#FFD700',
-  sadness: '#4682B4',
-  anger: '#DC143C',
-  fear: '#800080',
-  love: '#FF69B4',
-  surprise: '#FFA500',
-  disgust: '#8B4513'
+  joy: '#F4D35E',       // warm yellow
+  sadness: '#4D7EA8',   // calm blue
+  anger: '#E76F51',     // soft red
+  fear: '#6C5CE7',      // indigo
+  love: '#EF476F',      // pink red
+  surprise: '#06D6A0',  // teal
+  disgust: '#8D99AE'    // muted slate
 }
 
 // Emotion labels in Chinese
@@ -190,7 +201,7 @@ const sentimentDistributionChartData = computed(() => {
     distribution.negative || 0,
     distribution.neutral || 0
   ]
-  const backgroundColor = ['#28a745', '#dc3545', '#6c757d']
+  const backgroundColor = ['#2DD4BF', '#F43F5E', '#94A3B8']
 
   return {
     labels,
@@ -212,32 +223,37 @@ const chartOptions = {
       labels: {
         usePointStyle: true,
         padding: 20,
-        color: 'var(--text-primary)'
+        color: () => resolveCssVar('--text-primary', '#E5E7EB')
       }
     },
     tooltip: {
-      backgroundColor: 'var(--bg-secondary)',
-      titleColor: 'var(--text-primary)',
-      bodyColor: 'var(--text-secondary)',
-      borderColor: 'var(--border-color)',
-      borderWidth: 1
+      backgroundColor: () => resolveCssVar('--bg-secondary', '#111827'),
+      titleColor: () => resolveCssVar('--text-primary', '#E5E7EB'),
+      bodyColor: () => resolveCssVar('--text-secondary', '#CBD5E1'),
+      borderColor: () => resolveCssVar('--border-color', '#1F2937'),
+      borderWidth: 1,
+      callbacks: {
+        labelColor(ctx){
+          return { borderColor: ctx.dataset.borderColor, backgroundColor: ctx.dataset.borderColor };
+        }
+      }
     }
   },
   scales: {
     x: {
       grid: {
-        color: 'var(--bg-tertiary)'
+        color: () => resolveCssVar('--bg-tertiary', '#111827')
       },
       ticks: {
-        color: 'var(--text-secondary)'
+        color: () => resolveCssVar('--text-secondary', '#94A3B8')
       }
     },
     y: {
       grid: {
-        color: 'var(--bg-tertiary)'
+        color: () => resolveCssVar('--bg-tertiary', '#111827')
       },
       ticks: {
-        color: 'var(--text-secondary)'
+        color: () => resolveCssVar('--text-secondary', '#94A3B8')
       },
       beginAtZero: true,
       max: 1
@@ -254,15 +270,20 @@ const doughnutOptions = {
       labels: {
         usePointStyle: true,
         padding: 20,
-        color: 'var(--text-primary)'
+        color: () => resolveCssVar('--text-primary', '#E5E7EB')
       }
     },
     tooltip: {
-      backgroundColor: 'var(--bg-secondary)',
-      titleColor: 'var(--text-primary)',
-      bodyColor: 'var(--text-secondary)',
-      borderColor: 'var(--border-color)',
-      borderWidth: 1
+      backgroundColor: () => resolveCssVar('--bg-secondary', '#111827'),
+      titleColor: () => resolveCssVar('--text-primary', '#E5E7EB'),
+      bodyColor: () => resolveCssVar('--text-secondary', '#CBD5E1'),
+      borderColor: () => resolveCssVar('--border-color', '#1F2937'),
+      borderWidth: 1,
+      callbacks: {
+        labelColor(ctx){
+          return { borderColor: ctx.dataset.borderColor || '#000', backgroundColor: ctx.dataset.backgroundColor?.[ctx.dataIndex] || '#000' };
+        }
+      }
     }
   }
 }
@@ -276,24 +297,29 @@ const polarAreaOptions = {
       labels: {
         usePointStyle: true,
         padding: 20,
-        color: 'var(--text-primary)'
+        color: () => resolveCssVar('--text-primary', '#E5E7EB')
       }
     },
     tooltip: {
-      backgroundColor: 'var(--bg-secondary)',
-      titleColor: 'var(--text-primary)',
-      bodyColor: 'var(--text-secondary)',
-      borderColor: 'var(--border-color)',
-      borderWidth: 1
+      backgroundColor: () => resolveCssVar('--bg-secondary', '#111827'),
+      titleColor: () => resolveCssVar('--text-primary', '#E5E7EB'),
+      bodyColor: () => resolveCssVar('--text-secondary', '#CBD5E1'),
+      borderColor: () => resolveCssVar('--border-color', '#1F2937'),
+      borderWidth: 1,
+      callbacks: {
+        labelColor(ctx){
+          return { borderColor: ctx.dataset.borderColor || '#000', backgroundColor: ctx.dataset.backgroundColor?.[ctx.dataIndex] || '#000' };
+        }
+      }
     }
   },
   scales: {
     r: {
       grid: {
-        color: 'var(--bg-tertiary)'
+        color: () => resolveCssVar('--bg-tertiary', '#111827')
       },
       ticks: {
-        color: 'var(--text-secondary)',
+        color: () => resolveCssVar('--text-secondary', '#94A3B8'),
         backdropColor: 'transparent'
       },
       beginAtZero: true,
@@ -415,6 +441,8 @@ const renderWordCloud = () => {
 }
 
 onMounted(() => {
+  // 将根元素引用到当前容器，以便读取局部 CSS 变量
+  rootEl.value = document.querySelector('.emotion-analysis')
   loadEmotionData()
 })
 </script>
@@ -424,7 +452,14 @@ onMounted(() => {
     <div class="page-header">
       <div class="header-content">
         <h1 class="page-title">
-          <span class="title-icon">📊</span>
+          <span class="title-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18"/>
+              <path d="M7 16V9"/>
+              <path d="M12 16V5"/>
+              <path d="M17 16v-4"/>
+            </svg>
+          </span>
           情感成长分析
         </h1>
         <p class="page-subtitle">通过AI和数据分析了解你的情感变化</p>
@@ -436,7 +471,7 @@ onMounted(() => {
           class="btn btn-secondary"
           title="设置"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"/>
             <path d="M12 1v6m0 6v6m6-12h-6m-6 0h6m-3-5.2a9 9 0 1 0 0 10.4m0-10.4a9 9 0 1 1 0 10.4"/>
           </svg>
@@ -448,7 +483,7 @@ onMounted(() => {
           :disabled="analyzing"
           class="btn btn-primary"
         >
-          <svg v-if="!analyzing" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg v-if="!analyzing" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 12l2 2 4-4"/>
             <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
             <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
@@ -506,7 +541,12 @@ onMounted(() => {
     </div>
 
     <div v-else-if="!emotionStats || emotionStats.totalEntries === 0" class="empty-state">
-      <div class="empty-icon">📈</div>
+      <div class="empty-icon" aria-hidden="true">
+        <svg class="icon xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 21h18"/>
+          <path d="M5 17l4-4 3 3 6-6 2 2"/>
+        </svg>
+      </div>
       <h3>暂无情感数据</h3>
       <p>点击"开始分析"按钮来分析你的日记情感</p>
     </div>
@@ -515,7 +555,14 @@ onMounted(() => {
       <!-- Statistics Overview -->
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-icon">📝</div>
+          <div class="stat-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="3" width="14" height="18" rx="2"/>
+              <path d="M8 8h8"/>
+              <path d="M8 12h8"/>
+              <path d="M8 16h5"/>
+            </svg>
+          </div>
           <div class="stat-content">
             <div class="stat-value">{{ emotionStats.totalEntries }}</div>
             <div class="stat-label">已分析日记</div>
@@ -523,7 +570,14 @@ onMounted(() => {
         </div>
         
         <div class="stat-card">
-          <div class="stat-icon">😊</div>
+          <div class="stat-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M8.5 10h.01"/>
+              <path d="M15.5 10h.01"/>
+              <path d="M8.5 14c1.3 1 2.7 1 4 0s2.7-1 4 0"/>
+            </svg>
+          </div>
           <div class="stat-content">
             <div class="stat-value">
               {{ Math.round((emotionStats.sentimentDistribution?.positive || 0) / emotionStats.totalEntries * 100) }}%
@@ -533,7 +587,11 @@ onMounted(() => {
         </div>
         
         <div class="stat-card">
-          <div class="stat-icon">💝</div>
+          <div class="stat-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 21s-6-4.5-8-7.5C2 10 3.8 6.5 7 6.5c2 0 3 1.3 5 2 2-.7 3-2 5-2 3.2 0 5 3.5 3 7-2 3-8 7.5-8 7.5z"/>
+            </svg>
+          </div>
           <div class="stat-content">
             <div class="stat-value">
               {{ (emotionStats.averageEmotions?.joy || 0).toFixed(2) }}
@@ -543,7 +601,12 @@ onMounted(() => {
         </div>
         
         <div class="stat-card">
-          <div class="stat-icon">🔥</div>
+          <div class="stat-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 7h4l7 7-4 4-7-7V7z"/>
+              <circle cx="9" cy="9" r="1.3"/>
+            </svg>
+          </div>
           <div class="stat-content">
             <div class="stat-value">{{ emotionStats.topKeywords?.length || 0 }}</div>
             <div class="stat-label">情感关键词</div>
@@ -650,6 +713,10 @@ onMounted(() => {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
+  /* Local theming overrides */
+  --accent-primary: #6366F1; /* indigo-500 */
+  --accent-hover: #4F46E5;   /* indigo-600 */
+  --border-color: color-mix(in srgb, var(--accent-primary) 10%, var(--bg-tertiary));
 }
 
 .page-header {
@@ -675,7 +742,28 @@ onMounted(() => {
 }
 
 .title-icon {
-  font-size: 32px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.icon {
+  width: 1.25em;
+  height: 1.25em;
+  display: inline-block;
+  stroke: currentColor;
+  fill: none;
+}
+
+.page-title .icon {
+  width: 28px;
+  height: 28px;
+  color: var(--text-primary);
+}
+
+.empty-icon .icon.xl {
+  width: 64px;
+  height: 64px;
 }
 
 .page-subtitle {
@@ -706,13 +794,15 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background: var(--accent-primary);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
   color: white;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  filter: brightness(1.02);
   transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.16);
 }
 
 .btn-primary:disabled {
@@ -724,11 +814,18 @@ onMounted(() => {
   background: var(--bg-secondary);
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
 .btn-secondary:hover {
   background: var(--bg-tertiary);
   color: var(--text-primary);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 24%, transparent);
 }
 
 .spinner {
@@ -781,6 +878,18 @@ onMounted(() => {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 14px;
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+
+.select-input:focus,
+.text-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 24%, transparent);
+}
+
+.radio-option input {
+  accent-color: var(--accent-primary);
 }
 
 .radio-group {
@@ -830,6 +939,7 @@ onMounted(() => {
   font-size: 64px;
   margin-bottom: 16px;
   opacity: 0.6;
+  color: var(--text-secondary);
 }
 
 .empty-state h3 {
@@ -859,16 +969,28 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow .2s ease, border-color .2s ease;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent-primary) 24%, var(--border-color));
+  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
 }
 
 .stat-icon {
   font-size: 32px;
   flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.stat-icon .icon {
+  color: inherit;
+}
+
+.header-actions .btn .icon {
+  color: inherit;
 }
 
 .stat-content {
@@ -902,6 +1024,7 @@ onMounted(() => {
   border-radius: var(--radius-lg);
   padding: 24px;
   min-height: 400px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
 }
 
 .word-cloud-card {
