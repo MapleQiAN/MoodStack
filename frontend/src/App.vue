@@ -7,6 +7,7 @@ import DiaryEditor from './components/DiaryEditor.vue'
 import AuthDialog from './components/AuthDialog.vue'
 import SettingsDialog from './components/SettingsDialog.vue'
 import EmotionAnalysis from './components/EmotionAnalysis.vue'
+import TimeMachine from './components/TimeMachine.vue'
 
 const currentView = ref('list')
 const diaries = ref([])
@@ -242,6 +243,12 @@ const showListView = () => {
 
 const showAnalysisView = () => {
   currentView.value = 'analysis'
+  selectedDiary.value = null
+  editingDiary.value = null
+}
+
+const showTimeMachineView = () => {
+  currentView.value = 'timemachine'
   selectedDiary.value = null
   editingDiary.value = null
 }
@@ -563,6 +570,22 @@ const handleUserUpdated = async (updatedUser = null) => {
           </button>
           
           <button 
+            @click="showTimeMachineView" 
+            :class="['nav-item', { active: currentView === 'timemachine' }]"
+            :title="sidebarCollapsed ? '时光机' : ''"
+          >
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v6m0 6v6"/>
+                <path d="m21 12-6-6v12l6-6"/>
+                <path d="m3 12 6-6v12l-6-6"/>
+              </svg>
+            </span>
+            <span class="nav-text" v-show="!sidebarCollapsed">时光机</span>
+          </button>
+          
+          <button 
             @click="showAnalysisView" 
             :class="['nav-item', { active: currentView === 'analysis' }]"
             :title="sidebarCollapsed ? '情感分析' : ''"
@@ -630,6 +653,14 @@ const handleUserUpdated = async (updatedUser = null) => {
             :diary="editingDiary"
             @back="showListView"
             @diary-saved="handleDiarySaved"
+          />
+          
+          <TimeMachine
+            v-else-if="currentView === 'timemachine'"
+            key="timemachine"
+            :diaries="diaries"
+            @diary-select="handleViewDiary"
+            @create-diary="handleCreateDiary"
           />
           
           <EmotionAnalysis
