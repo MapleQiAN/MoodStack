@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode"
 
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
@@ -133,6 +134,7 @@ func AnalyzeEmotionProgrammatically(content string) (*EmotionAnalysisResult, err
 		return nil, fmt.Errorf("初始化词典失败: %v", err)
 	}
 
+	_ = content
 	content = strings.ToLower(content)
 
 	// Initialize emotion scores
@@ -157,18 +159,30 @@ func AnalyzeEmotionProgrammatically(content string) (*EmotionAnalysisResult, err
 	for emotion, keywords := range EmotionKeywords {
 		matchCount := 0
 		for _, keyword := range keywords {
-			// Use word boundaries to match complete words
-			pattern := `\b` + regexp.QuoteMeta(keyword) + `\b`
-			matched, _ := regexp.MatchString(pattern, content)
+			keyword = strings.ToLower(keyword)
+			// For Chinese text, use simple contains check instead of word boundaries
+			// For English, still use word boundaries
+			var matched bool
+			if containsChinese(keyword) || containsChinese(content) {
+				// Simple substring match for Chinese
+				matched = strings.Contains(content, keyword)
+			} else {
+				// Word boundary match for English
+				pattern := `\b` + regexp.QuoteMeta(keyword) + `\b`
+				matched, _ = regexp.MatchString(pattern, content)
+			}
+
 			if matched {
 				matchCount++
 				allKeywords = append(allKeywords, keyword)
 			}
 		}
-		// Normalize score based on content length
-		emotions[emotion] = float64(matchCount) / float64(totalWords) * 10
-		if emotions[emotion] > 1 {
-			emotions[emotion] = 1 // Cap at 1.0
+		// Improved scoring: give more weight to matches
+		if matchCount > 0 {
+			emotions[emotion] = float64(matchCount) / float64(totalWords) * 20 // Increased multiplier
+			if emotions[emotion] > 1 {
+				emotions[emotion] = 1 // Cap at 1.0
+			}
 		}
 	}
 
@@ -177,16 +191,28 @@ func AnalyzeEmotionProgrammatically(content string) (*EmotionAnalysisResult, err
 	negativeCount := 0
 
 	for _, keyword := range SentimentKeywords["positive"] {
-		pattern := `\b` + regexp.QuoteMeta(keyword) + `\b`
-		matched, _ := regexp.MatchString(pattern, content)
+		keyword = strings.ToLower(keyword)
+		var matched bool
+		if containsChinese(keyword) || containsChinese(content) {
+			matched = strings.Contains(content, keyword)
+		} else {
+			pattern := `\b` + regexp.QuoteMeta(keyword) + `\b`
+			matched, _ = regexp.MatchString(pattern, content)
+		}
 		if matched {
 			positiveCount++
 		}
 	}
 
 	for _, keyword := range SentimentKeywords["negative"] {
-		pattern := `\b` + regexp.QuoteMeta(keyword) + `\b`
-		matched, _ := regexp.MatchString(pattern, content)
+		keyword = strings.ToLower(keyword)
+		var matched bool
+		if containsChinese(keyword) || containsChinese(content) {
+			matched = strings.Contains(content, keyword)
+		} else {
+			pattern := `\b` + regexp.QuoteMeta(keyword) + `\b`
+			matched, _ = regexp.MatchString(pattern, content)
+		}
 		if matched {
 			negativeCount++
 		}
@@ -576,7 +602,7 @@ func AnalyzeDiaryEmotionEnhanced(diaryID string, userID uint, content string, us
 	}
 
 	// 如果增强版失败，回退到基础版本
-	return AnalyzeDiaryEmotion(diaryID, userID, content, useAI, ollamaURL)
+	return AnalyzeDiaryEmotionBasic(diaryID, userID, content, useAI, ollamaURL)
 }
 
 // performEnhancedAnalysis 执行增强版情绪分析
@@ -823,19 +849,34 @@ func analyzeWithEnhancedEngine(content string) (*EmotionAnalysisResult, error) {
 func findEnhancedMatches(content string, words []string, dict *EnhancedDictionary) []KeywordMatch {
 	var matches []KeywordMatch
 
-	// 创建词汇位置索引
-	wordPositions := make(map[string][]int)
-	for i, word := range words {
-		wordPositions[word] = append(wordPositions[word], i)
-	}
-
 	// 查找情绪关键词
 	for emotion, category := range dict.Emotions {
 		// 检查所有关键词
 		for _, keyword := range category.Keywords {
 			keyword = strings.ToLower(keyword)
-			if positions, found := wordPositions[keyword]; found {
-				for _, pos := range positions {
+
+			// 使用改进的匹配逻辑
+			var matched bool
+			var positions []int
+
+			if containsChinese(keyword) || containsChinese(content) {
+				// 对于中文，使用简单的包含匹配
+				if strings.Contains(content, keyword) {
+					matched = true
+					// 找到所有匹配位置（简化处理）
+					positions = append(positions, 0)
+				}
+			} else {
+				// 对于英文，使用词边界匹配
+				pattern := `\b` + regexp.QuoteMeta(keyword) + `\b`
+				if m, _ := regexp.MatchString(pattern, content); m {
+					matched = true
+					positions = append(positions, 0)
+				}
+			}
+
+			if matched {
+				for range positions {
 					// 确定强度级别
 					intensity := getKeywordIntensity(keyword, category)
 
@@ -847,8 +888,8 @@ func findEnhancedMatches(content string, words []string, dict *EnhancedDictionar
 						Modified:  false,
 					}
 
-					// 应用上下文修饰符
-					match = applyContextModifiersToMatch(match, words, pos, dict.ContextModifiers)
+					// 应用上下文修饰符（简化版）
+					match = applyContextModifiersSimple(match, content, keyword, dict.ContextModifiers)
 					matches = append(matches, match)
 				}
 			}
@@ -897,6 +938,45 @@ func applyContextModifiersToMatch(match KeywordMatch, words []string, position i
 		match.Modified = true
 		match.Modifier = "diminisher"
 		return match
+	}
+
+	return match
+}
+
+// applyContextModifiersSimple 简化版上下文修饰符应用
+func applyContextModifiersSimple(match KeywordMatch, content string, keyword string, modifiers ContextModifiers) KeywordMatch {
+	// 检查否定词
+	for _, negation := range modifiers.Negation {
+		negation = strings.ToLower(negation)
+		// 检查否定词是否在关键词附近
+		if strings.Contains(content, negation+keyword) || strings.Contains(content, negation+" "+keyword) {
+			match.Weight *= modifierWeights["negation"]
+			match.Modified = true
+			match.Modifier = "negation"
+			return match
+		}
+	}
+
+	// 检查强化词
+	for _, intensifier := range modifiers.Intensifiers {
+		intensifier = strings.ToLower(intensifier)
+		if strings.Contains(content, intensifier+keyword) || strings.Contains(content, intensifier+" "+keyword) {
+			match.Weight *= modifierWeights["intensifier"]
+			match.Modified = true
+			match.Modifier = "intensifier"
+			return match
+		}
+	}
+
+	// 检查弱化词
+	for _, diminisher := range modifiers.Diminishers {
+		diminisher = strings.ToLower(diminisher)
+		if strings.Contains(content, diminisher+keyword) || strings.Contains(content, diminisher+" "+keyword) {
+			match.Weight *= modifierWeights["diminisher"]
+			match.Modified = true
+			match.Modifier = "diminisher"
+			return match
+		}
 	}
 
 	return match
@@ -1046,4 +1126,14 @@ func removeDuplicatesStr(slice []string) []string {
 	}
 
 	return result
+}
+
+// containsChinese checks if a string contains Chinese characters
+func containsChinese(s string) bool {
+	for _, r := range s {
+		if unicode.Is(unicode.Scripts["Han"], r) {
+			return true
+		}
+	}
+	return false
 }

@@ -5,6 +5,8 @@ import {main} from '../models';
 
 export function AnalyzeAllDiariesEmotion(arg1:boolean,arg2:string):Promise<Record<string, any>>;
 
+export function AnalyzeAllDiariesEmotionWithForce(arg1:boolean,arg2:string,arg3:boolean):Promise<Record<string, any>>;
+
 export function AnalyzeDiaryEmotion(arg1:string,arg2:boolean,arg3:string):Promise<app.EmotionAnalysisResult>;
 
 export function AuthenticateUser(arg1:string,arg2:string):Promise<app.AuthResult>;

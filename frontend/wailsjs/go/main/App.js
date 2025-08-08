@@ -6,6 +6,10 @@ export function AnalyzeAllDiariesEmotion(arg1, arg2) {
   return window['go']['main']['App']['AnalyzeAllDiariesEmotion'](arg1, arg2);
 }
 
+export function AnalyzeAllDiariesEmotionWithForce(arg1, arg2, arg3) {
+  return window['go']['main']['App']['AnalyzeAllDiariesEmotionWithForce'](arg1, arg2, arg3);
+}
+
 export function AnalyzeDiaryEmotion(arg1, arg2, arg3) {
   return window['go']['main']['App']['AnalyzeDiaryEmotion'](arg1, arg2, arg3);
 }

@@ -3,7 +3,7 @@ import { ref, onMounted, computed, nextTick } from 'vue'
 import { 
   GetUserEmotionTrends, 
   GetUserEmotionStatistics, 
-  AnalyzeAllDiariesEmotion 
+  AnalyzeAllDiariesEmotion
 } from '../../wailsjs/go/main/App'
 import {
   Chart as ChartJS,
@@ -40,7 +40,17 @@ const selectedTimeRange = ref(30) // days
 const analysisMethod = ref('programmatic') // 'programmatic' or 'ai'
 const ollamaURL = ref('http://localhost:11434')
 const showSettings = ref(false)
+const forceReAnalysis = ref(false)
 const rootEl = ref(null)
+
+// Custom notification system
+const notification = ref({
+  show: false,
+  title: '',
+  message: '',
+  type: 'info', // 'success', 'error', 'warning', 'info'
+  details: []
+})
 
 const resolveCssVar = (name, fallback) => {
   try {
@@ -371,11 +381,58 @@ const analyzeAllDiaries = async () => {
     
     console.log('分析结果:', result)
     
+    // Show detailed result message
+    if (!result) {
+      showNotification('分析失败', '分析结果为空，请重试', 'error')
+      return
+    }
+    
+    if (result.total === 0) {
+      showNotification('无日记', result.message || '没有找到日记进行分析', 'warning')
+      return
+    }
+    
+    // Prepare summary message
+    let summary = `总计 ${result.total} 篇日记，成功 ${result.success} 篇`
+    
+    if (result.skipped > 0) {
+      summary += `，跳过 ${result.skipped} 篇`
+    }
+    
+    if (result.failures > 0) {
+      summary += `，失败 ${result.failures} 篇`
+    }
+    
+    // Prepare details
+    let details = []
+    
+    if (result.results && result.results.length > 0) {
+      details = result.results.map(item => {
+        let detail = `${item.title}: ${item.status}`
+        if (item.emotion) {
+          detail += ` (${item.emotion})`
+        }
+        if (item.error) {
+          detail += ` - ${item.error}`
+        }
+        return detail
+      })
+    }
+    
+    if (result.lastError) {
+      details.push(`最后错误: ${result.lastError}`)
+    }
+    
+    // Determine notification type
+    const type = result.failures > 0 ? 'warning' : 'success'
+    
+    showNotification('分析完成', summary, type, details)
+    
     // Reload data after analysis
     await loadEmotionData()
   } catch (error) {
     console.error('分析失败:', error)
-    alert('情感分析失败: ' + error.message)
+    showNotification('分析失败', '情感分析过程中发生错误', 'error', [error.message])
   } finally {
     analyzing.value = false
   }
@@ -383,6 +440,28 @@ const analyzeAllDiaries = async () => {
 
 const onTimeRangeChange = () => {
   loadEmotionData()
+}
+
+// Notification functions
+const showNotification = (title, message, type = 'info', details = []) => {
+  notification.value = {
+    show: true,
+    title,
+    message,
+    type,
+    details
+  }
+  
+  // Auto close after 5 seconds (except for errors)
+  if (type !== 'error') {
+    setTimeout(() => {
+      closeNotification()
+    }, 5000)
+  }
+}
+
+const closeNotification = () => {
+  notification.value.show = false
 }
 
 const renderWordCloud = () => {
@@ -468,12 +547,13 @@ onMounted(() => {
       <div class="header-actions">
         <button 
           @click="showSettings = !showSettings"
-          class="btn btn-secondary"
-          title="设置"
+          class="btn btn-settings"
+          :class="{ 'active': showSettings }"
+          title="分析设置"
         >
           <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
             <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v6m0 6v6m6-12h-6m-6 0h6m-3-5.2a9 9 0 1 0 0 10.4m0-10.4a9 9 0 1 1 0 10.4"/>
           </svg>
           设置
         </button>
@@ -481,12 +561,12 @@ onMounted(() => {
         <button 
           @click="analyzeAllDiaries" 
           :disabled="analyzing"
-          class="btn btn-primary"
+          class="btn btn-analyze"
         >
           <svg v-if="!analyzing" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3v18h18"/>
+            <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
             <path d="M9 12l2 2 4-4"/>
-            <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
-            <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
           </svg>
           <div v-else class="spinner"></div>
           {{ analyzing ? '分析中...' : '开始分析' }}
@@ -531,6 +611,14 @@ onMounted(() => {
             placeholder="http://localhost:11434"
           />
           <small class="help-text">确保Ollama服务正在运行且已安装中文模型</small>
+        </div>
+        
+        <div class="setting-group">
+          <label class="radio-option">
+            <input type="checkbox" v-model="forceReAnalysis" />
+            <span>强制重新分析（重新分析已分析过的日记）</span>
+          </label>
+          <small class="help-text">勾选此项将重新分析所有日记，包括已经分析过的</small>
         </div>
       </div>
     </div>
@@ -705,6 +793,43 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Toast Notification -->
+    <div v-if="notification.show" class="toast-notification" :class="notification.type">
+      <div class="toast-icon">
+        <svg v-if="notification.type === 'success'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 12l2 2 4-4"/>
+          <circle cx="12" cy="12" r="9"/>
+        </svg>
+        <svg v-else-if="notification.type === 'error'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M15 9l-6 6"/>
+          <path d="M9 9l6 6"/>
+        </svg>
+        <svg v-else-if="notification.type === 'warning'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <path d="M12 9v4"/>
+          <path d="M12 17h.01"/>
+        </svg>
+        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 16v-4"/>
+          <path d="M12 8h.01"/>
+        </svg>
+      </div>
+      
+      <div class="toast-content">
+        <div class="toast-title">{{ notification.title }}</div>
+        <div class="toast-message">{{ notification.message }}</div>
+      </div>
+      
+      <button @click="closeNotification" class="toast-close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18"/>
+          <path d="M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -789,52 +914,118 @@ onMounted(() => {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+.btn .icon {
+  transition: transform 0.2s ease;
+}
+
+.btn:hover .icon {
+  transform: scale(1.1);
+}
+
+.btn-analyze {
+  background: linear-gradient(135deg, var(--nord8), var(--nord9));
   color: white;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  border: 1px solid var(--nord8);
+  box-shadow: 0 4px 12px rgba(136, 192, 208, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.02);
+.btn-analyze::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-analyze:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.btn-analyze:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--nord9), var(--nord10));
+  border-color: var(--nord9);
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.16);
+  box-shadow: 0 8px 20px rgba(136, 192, 208, 0.4);
 }
 
-.btn-primary:disabled {
+.btn-analyze:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
-.btn-secondary {
-  background: var(--bg-secondary);
+.btn-settings {
+  background: var(--bg-glass);
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(46, 52, 64, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-secondary:hover {
-  background: var(--bg-tertiary);
+.btn-settings:hover {
+  background: var(--bg-glass-hover);
   color: var(--text-primary);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+  border-color: var(--nord8);
+  box-shadow: 0 4px 12px rgba(136, 192, 208, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-settings.active {
+  background: var(--accent-primary-alpha);
+  color: var(--nord8);
+  border-color: var(--nord8);
+  box-shadow: 0 4px 12px rgba(136, 192, 208, 0.2);
+  animation: settings-pulse 2s ease-in-out infinite;
+}
+
+@keyframes settings-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(136, 192, 208, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(136, 192, 208, 0.3);
+  }
 }
 
 .btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 24%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nord8) 24%, transparent);
+}
+
+.btn-analyze:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nord8) 24%, transparent), 0 8px 20px rgba(136, 192, 208, 0.4);
+}
+
+.btn-settings:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nord8) 24%, transparent), 0 4px 12px rgba(136, 192, 208, 0.15);
 }
 
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid currentColor;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.btn-analyze .spinner {
+  border-color: rgba(255, 255, 255, 0.2);
+  border-top-color: white;
 }
 
 @keyframes spin {
@@ -1133,6 +1324,147 @@ onMounted(() => {
   
   .chart-container {
     height: 250px;
+  }
+}
+
+/* Toast Notification Styles - Nord Theme */
+.toast-notification {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 16px;
+  max-width: 400px;
+  min-width: 320px;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast-notification.success {
+  border-left: 4px solid var(--success-primary);
+}
+
+.toast-notification.error {
+  border-left: 4px solid var(--error-primary);
+}
+
+.toast-notification.warning {
+  border-left: 4px solid var(--warning-primary);
+}
+
+.toast-notification.info {
+  border-left: 4px solid var(--accent-info);
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+
+.toast-notification.success .toast-icon {
+  color: var(--success-primary);
+}
+
+.toast-notification.error .toast-icon {
+  color: var(--error-primary);
+}
+
+.toast-notification.warning .toast-icon {
+  color: var(--warning-primary);
+}
+
+.toast-notification.info .toast-icon {
+  color: var(--accent-info);
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.toast-message {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-top: -2px;
+}
+
+.toast-close:hover {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Mobile responsiveness for toast */
+@media (max-width: 768px) {
+  .toast-notification {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .toast-notification {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    padding: 14px;
+  }
+  
+  .toast-title {
+    font-size: 13px;
+  }
+  
+  .toast-message {
+    font-size: 12px;
   }
 }
 </style>
