@@ -1,3 +1,4 @@
 EXPORTS
    WH_CheckAvailability
    WH_RequestVerification
+   WH_RequestVerificationWithParent

@@ -915,7 +915,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 }
 
 .auth-button.biometric {
-  background: #ebcb8b;
+  background: #eaaa29;
   color: var(--bg-primary);
   border: none;
   box-shadow: 0 2px 8px rgba(235, 203, 139, 0.2);
@@ -923,7 +923,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 
 .auth-button.biometric:hover:not(:disabled),
 .auth-button.biometric:focus-visible:not(:disabled) {
-  background: #d9b15f;
+  background: #cb911b;
   color: var(--bg-primary);
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(235, 203, 139, 0.3);

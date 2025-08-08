@@ -12,9 +12,15 @@ import (
 
 // WindowsHello DLL bridge exports
 var (
-	whDLL                     *syscall.DLL
-	procWHCheckAvailability   *syscall.Proc
-	procWHRequestVerification *syscall.Proc
+	whDLL                           *syscall.DLL
+	procWHCheckAvailability         *syscall.Proc
+	procWHRequestVerification       *syscall.Proc
+	procWHRequestVerificationParent *syscall.Proc
+
+	// Windows API for getting window handle
+	user32                  = syscall.NewLazyDLL("user32.dll")
+	procFindWindow          = user32.NewProc("FindWindowW")
+	procGetForegroundWindow = user32.NewProc("GetForegroundWindow")
 )
 
 // InitializeWindowsHello loads the native DLL and locates exports
@@ -68,7 +74,7 @@ func InitializeWindowsHello(dllPath string) error {
 		}
 
 		// 尝试解析导出到临时变量
-		var checkProc, verifyProc *syscall.Proc
+		var checkProc, verifyProc, verifyParentProc *syscall.Proc
 		checkProc, err = loaded.FindProc("WH_CheckAvailability")
 		if err != nil {
 			// 释放并尝试下一个路径
@@ -88,11 +94,21 @@ func InitializeWindowsHello(dllPath string) error {
 			}
 			continue
 		}
+		verifyParentProc, err = loaded.FindProc("WH_RequestVerificationWithParent")
+		if err != nil {
+			_ = loaded.Release()
+			loaded = nil
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
 
 		// 一切就绪后再写入全局变量
 		whDLL = loaded
 		procWHCheckAvailability = checkProc
 		procWHRequestVerification = verifyProc
+		procWHRequestVerificationParent = verifyParentProc
 		return nil
 	}
 
@@ -104,7 +120,7 @@ func InitializeWindowsHello(dllPath string) error {
 
 // BiometricSupport checks if Windows Hello is available via DLL
 func BiometricSupport() (*BiometricInfo, error) {
-	if whDLL == nil || procWHCheckAvailability == nil || procWHRequestVerification == nil {
+	if whDLL == nil || procWHCheckAvailability == nil || procWHRequestVerification == nil || procWHRequestVerificationParent == nil {
 		// 默认从当前目录加载
 		if err := InitializeWindowsHello("WindowsHelloBridge.dll"); err != nil {
 			return &BiometricInfo{Supported: false, Message: fmt.Sprintf("无法加载Windows Hello模块: %v", err)}, nil
@@ -132,6 +148,26 @@ func BiometricSupport() (*BiometricInfo, error) {
 	}
 }
 
+// GetMainWindowHandle attempts to find the Wails application window handle
+func GetMainWindowHandle() uintptr {
+	// Try to get the foreground window (should be our Wails app when Windows Hello is triggered)
+	hwnd, _, _ := procGetForegroundWindow.Call()
+	if hwnd != 0 {
+		return hwnd
+	}
+
+	// Fallback: try to find by window class (Wails uses Chrome's window class)
+	className, _ := syscall.UTF16PtrFromString("Chrome_WidgetWin_1")
+	windowName, _ := syscall.UTF16PtrFromString("MoodStack")
+
+	hwnd, _, _ = procFindWindow.Call(
+		uintptr(unsafe.Pointer(className)),
+		uintptr(unsafe.Pointer(windowName)),
+	)
+
+	return hwnd
+}
+
 // AuthenticateWithBiometric authenticates the user via Windows Hello
 func AuthenticateWithBiometric(username string) (*AuthResult, error) {
 	user, err := GetUserByUsername(username)
@@ -142,21 +178,29 @@ func AuthenticateWithBiometric(username string) (*AuthResult, error) {
 		return &AuthResult{Success: false, Message: "该用户未启用生物识别认证"}, nil
 	}
 
-	if whDLL == nil || procWHCheckAvailability == nil || procWHRequestVerification == nil {
+	if whDLL == nil || procWHCheckAvailability == nil || procWHRequestVerification == nil || procWHRequestVerificationParent == nil {
 		if err := InitializeWindowsHello("WindowsHelloBridge.dll"); err != nil {
 			return &AuthResult{Success: false, Message: fmt.Sprintf("无法加载Windows Hello模块: %v", err)}, nil
 		}
 	}
-	if procWHRequestVerification == nil {
+	if procWHRequestVerificationParent == nil {
 		return &AuthResult{Success: false, Message: "Windows Hello验证函数未初始化"}, nil
 	}
 
-	prompt := "MoodStack需要验证您的身份"
+	prompt := "我是MoodStack，你是？"
 	utf16, err := syscall.UTF16PtrFromString(prompt)
 	if err != nil {
 		return &AuthResult{Success: false, Message: "提示字符串编码失败"}, nil
 	}
-	r1, _, _ := procWHRequestVerification.Call(uintptr(unsafe.Pointer(utf16)))
+
+	// 获取主窗口句柄
+	parentHwnd := GetMainWindowHandle()
+
+	// 使用支持父窗口的新函数
+	r1, _, _ := procWHRequestVerificationParent.Call(
+		uintptr(unsafe.Pointer(utf16)),
+		parentHwnd,
+	)
 	code := int(r1)
 	switch code {
 	case 0:

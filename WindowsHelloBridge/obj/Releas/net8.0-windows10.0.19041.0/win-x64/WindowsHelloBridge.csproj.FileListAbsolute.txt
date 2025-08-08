@@ -1,0 +1,12 @@
+E:\GoProject\MoodStack\WindowsHelloBridge\bin\Releas\net8.0-windows10.0.19041.0\win-x64\WindowsHelloBridge.deps.json
+E:\GoProject\MoodStack\WindowsHelloBridge\bin\Releas\net8.0-windows10.0.19041.0\win-x64\WindowsHelloBridge.dll
+E:\GoProject\MoodStack\WindowsHelloBridge\bin\Releas\net8.0-windows10.0.19041.0\win-x64\WindowsHelloBridge.pdb
+E:\GoProject\MoodStack\WindowsHelloBridge\obj\Releas\net8.0-windows10.0.19041.0\win-x64\WindowsHelloBridge.GeneratedMSBuildEditorConfig.editorconfig
+E:\GoProject\MoodStack\WindowsHelloBridge\obj\Releas\net8.0-windows10.0.19041.0\win-x64\WindowsHelloBridge.AssemblyInfoInputs.cache
+E:\GoProject\MoodStack\WindowsHelloBridge\obj\Releas\net8.0-windows10.0.19041.0\win-x64\WindowsHelloBridge.AssemblyInfo.cs
+E:\GoProject\MoodStack\WindowsHelloBridge\obj\Releas\net8.0-windows10.0.19041.0\win-x64\WindowsHelloBridge.csproj.CoreCompileInputs.cache
+E:\GoProject\MoodStack\WindowsHelloBridge\obj\Releas\net8.0-windows10.0.19041.0\win-x64\WindowsHelloBridge.sourcelink.json
+E:\GoProject\MoodStack\WindowsHelloBridge\obj\Releas\net8.0-windows10.0.19041.0\win-x64\WindowsHelloBridge.dll
+E:\GoProject\MoodStack\WindowsHelloBridge\obj\Releas\net8.0-windows10.0.19041.0\win-x64\refint\WindowsHelloBridge.dll
+E:\GoProject\MoodStack\WindowsHelloBridge\obj\Releas\net8.0-windows10.0.19041.0\win-x64\WindowsHelloBridge.pdb
+E:\GoProject\MoodStack\WindowsHelloBridge\obj\Releas\net8.0-windows10.0.19041.0\win-x64\ref\WindowsHelloBridge.dll

@@ -515,6 +515,11 @@ func (a *App) GetUserEmotionStatistics(days int) (map[string]interface{}, error)
 
 // AnalyzeAllDiariesEmotion analyzes emotion for all user's diaries
 func (a *App) AnalyzeAllDiariesEmotion(useAI bool, ollamaURL string) (map[string]interface{}, error) {
+	return a.AnalyzeAllDiariesEmotionWithForce(useAI, ollamaURL, false)
+}
+
+// AnalyzeAllDiariesEmotionWithForce analyzes emotion for all user's diaries with force option
+func (a *App) AnalyzeAllDiariesEmotionWithForce(useAI bool, ollamaURL string, force bool) (map[string]interface{}, error) {
 	if a.currentUser == nil {
 		return nil, fmt.Errorf("用户未登录")
 	}
@@ -525,26 +530,58 @@ func (a *App) AnalyzeAllDiariesEmotion(useAI bool, ollamaURL string) (map[string
 		return nil, fmt.Errorf("获取日记列表失败: %v", err)
 	}
 
+	if len(diaries) == 0 {
+		return map[string]interface{}{
+			"total":     0,
+			"success":   0,
+			"failures":  0,
+			"completed": true,
+			"message":   "没有找到日记",
+		}, nil
+	}
+
 	successCount := 0
 	failureCount := 0
+	skippedCount := 0
 	var lastError error
+	var analysisResults []map[string]interface{}
 
 	// Analyze each diary
 	for _, diary := range diaries {
-		// Skip if already analyzed (unless we're forcing re-analysis)
+		// Check if already analyzed (skip only if not forcing)
 		existing, err := app.GetEmotionAnalysis(diary.ID, a.currentUser.ID)
-		if err == nil && existing != nil {
+		if err == nil && existing != nil && !force {
+			// Already analyzed, count as success but don't re-analyze
 			successCount++
+			skippedCount++
+			analysisResults = append(analysisResults, map[string]interface{}{
+				"diaryId": diary.ID,
+				"title":   diary.Title,
+				"status":  "已分析",
+				"emotion": existing.DominantEmotion,
+			})
 			continue
 		}
 
 		// Analyze emotion
-		_, err = app.AnalyzeDiaryEmotion(diary.ID, a.currentUser.ID, diary.Content, useAI, ollamaURL)
+		result, err := app.AnalyzeDiaryEmotion(diary.ID, a.currentUser.ID, diary.Content, useAI, ollamaURL)
 		if err != nil {
 			failureCount++
 			lastError = err
+			analysisResults = append(analysisResults, map[string]interface{}{
+				"diaryId": diary.ID,
+				"title":   diary.Title,
+				"status":  "分析失败",
+				"error":   err.Error(),
+			})
 		} else {
 			successCount++
+			analysisResults = append(analysisResults, map[string]interface{}{
+				"diaryId": diary.ID,
+				"title":   diary.Title,
+				"status":  "分析成功",
+				"emotion": result.DominantEmotion,
+			})
 		}
 	}
 
@@ -552,7 +589,9 @@ func (a *App) AnalyzeAllDiariesEmotion(useAI bool, ollamaURL string) (map[string
 		"total":     len(diaries),
 		"success":   successCount,
 		"failures":  failureCount,
-		"completed": successCount == len(diaries),
+		"skipped":   skippedCount,
+		"completed": failureCount == 0,
+		"results":   analysisResults,
 	}
 
 	if lastError != nil {
