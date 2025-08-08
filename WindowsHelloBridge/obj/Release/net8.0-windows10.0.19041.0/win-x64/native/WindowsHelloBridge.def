@@ -1,0 +1,3 @@
+EXPORTS
+   WH_CheckAvailability
+   WH_RequestVerification
