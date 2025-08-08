@@ -7,65 +7,93 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 )
 
-// EmotionKeywords defines emotion keywords for programmatic analysis
-var EmotionKeywords = map[string][]string{
-	"joy": {
-		"开心", "快乐", "高兴", "愉悦", "兴奋", "满足", "幸福", "欣喜", "喜悦", "舒心",
-		"畅快", "欢乐", "惊喜", "满意", "放松", "轻松", "安心", "温暖", "甜蜜", "美好",
-		"棒", "太好了", "成功", "胜利", "完美", "优秀", "精彩", "wonderful", "amazing",
-	},
-	"sadness": {
-		"难过", "伤心", "悲伤", "痛苦", "沮丧", "失落", "郁闷", "忧郁", "抑郁", "孤独",
-		"寂寞", "空虚", "无助", "绝望", "心酸", "心痛", "眼泪", "哭", "流泪", "想哭",
-		"失望", "失落", "遗憾", "可惜", "不幸", "糟糕", "terrible", "awful", "sad",
-	},
-	"anger": {
-		"愤怒", "生气", "恼火", "烦躁", "暴躁", "愤恨", "憎恨", "讨厌", "厌恶", "反感",
-		"不爽", "火大", "气死", "烦死", "讨厌死", "恨", "愤慨", "激愤", "不满", "抱怨",
-		"该死", "混蛋", "白痴", "蠢", "垃圾", "操", "妈的", "angry", "hate", "furious",
-	},
-	"fear": {
-		"害怕", "恐惧", "担心", "紧张", "焦虑", "不安", "慌张", "恐慌", "惊慌", "胆怯",
-		"畏惧", "忧虑", "忐忑", "心慌", "紧张兮兮", "提心吊胆", "惶恐", "惊恐", "战栗",
-		"颤抖", "吓", "怕", "可怕", "恐怖", "吓死", "scared", "afraid", "terrified",
-	},
-	"love": {
-		"爱", "喜欢", "爱情", "恋爱", "暗恋", "表白", "约会", "亲", "吻", "拥抱",
-		"想念", "思念", "牵挂", "在乎", "关心", "温柔", "甜蜜", "浪漫", "心动", "迷恋",
-		"深爱", "热爱", "钟爱", "疼爱", "宠爱", "爱意", "love", "romantic", "crush",
-	},
-	"surprise": {
-		"惊讶", "震惊", "吃惊", "惊奇", "意外", "出乎意料", "想不到", "没想到", "突然",
-		"忽然", "竟然", "居然", "原来", "天哪", "我的天", "不会吧", "真的吗", "哇",
-		"amazing", "surprising", "unexpected", "wow", "omg",
-	},
-	"disgust": {
-		"恶心", "讨厌", "厌恶", "反感", "嫌弃", "恶劣", "肮脏", "龌龊", "污秽", "臭",
-		"难闻", "难看", "丑", "恶心死", "受不了", "无法忍受", "gross", "disgusting", "yuck",
-	},
+// EmotionKeywords will be loaded from JSON file
+var EmotionKeywords map[string][]string
+
+// SentimentKeywords will be loaded from JSON file
+var SentimentKeywords map[string][]string
+
+// Dictionary structure for JSON loading
+type DictionaryData struct {
+	Emotions         map[string]EmotionCategory   `json:"emotions"`
+	Sentiment        map[string]SentimentCategory `json:"sentiment"`
+	ContextModifiers ContextModifiers             `json:"context_modifiers"`
 }
 
-// SentimentKeywords defines positive and negative sentiment keywords
-var SentimentKeywords = map[string][]string{
-	"positive": {
-		"好", "棒", "优秀", "完美", "成功", "胜利", "满意", "开心", "快乐", "幸福",
-		"美好", "温暖", "甜蜜", "感谢", "赞", "喜欢", "爱", "支持", "鼓励", "positive",
-		"great", "good", "excellent", "awesome", "wonderful", "amazing", "perfect",
-	},
-	"negative": {
-		"坏", "糟", "失败", "错误", "问题", "困难", "麻烦", "痛苦", "难过", "伤心",
-		"失望", "讨厌", "恨", "愤怒", "害怕", "担心", "焦虑", "压力", "negative",
-		"bad", "terrible", "awful", "horrible", "wrong", "failed", "problem",
-	},
+type EmotionCategory struct {
+	Keywords  []string        `json:"keywords"`
+	Intensity IntensityLevels `json:"intensity"`
+}
+
+type SentimentCategory struct {
+	Keywords []string `json:"keywords"`
+}
+
+var (
+	dictionaryData        *DictionaryData
+	dictionaryInitialized bool
+)
+
+// initializeDictionary initializes the emotion and sentiment dictionaries from JSON file
+func initializeDictionary() error {
+	if dictionaryInitialized {
+		return nil
+	}
+
+	// Try to load from different possible paths
+	possiblePaths := []string{
+		"emotion_dictionaries/emotion_keywords.json",
+		"./emotion_keywords.json",
+		"../emotion_dictionaries/emotion_keywords.json",
+	}
+
+	var data []byte
+	var err error
+	var loadedPath string
+
+	for _, path := range possiblePaths {
+		data, err = os.ReadFile(path)
+		if err == nil {
+			loadedPath = path
+			break
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("无法加载词典文件: %v", err)
+	}
+
+	dictionaryData = &DictionaryData{}
+	if err := json.Unmarshal(data, dictionaryData); err != nil {
+		return fmt.Errorf("解析词典文件失败 (%s): %v", loadedPath, err)
+	}
+
+	// Initialize EmotionKeywords
+	EmotionKeywords = make(map[string][]string)
+	for emotion, category := range dictionaryData.Emotions {
+		EmotionKeywords[emotion] = category.Keywords
+	}
+
+	// Initialize SentimentKeywords
+	SentimentKeywords = make(map[string][]string)
+	for sentiment, category := range dictionaryData.Sentiment {
+		SentimentKeywords[sentiment] = category.Keywords
+	}
+
+	dictionaryInitialized = true
+	return nil
 }
 
 // OllamaRequest represents a request to Ollama API
@@ -100,6 +128,11 @@ type EmotionAnalysisResult struct {
 
 // AnalyzeEmotionProgrammatically performs rule-based emotion analysis
 func AnalyzeEmotionProgrammatically(content string) (*EmotionAnalysisResult, error) {
+	// Initialize dictionary if not already done
+	if err := initializeDictionary(); err != nil {
+		return nil, fmt.Errorf("初始化词典失败: %v", err)
+	}
+
 	content = strings.ToLower(content)
 
 	// Initialize emotion scores
@@ -484,8 +517,15 @@ func GetEmotionStatistics(userID uint, days int) (map[string]interface{}, error)
 	}, nil
 }
 
-// AnalyzeDiaryEmotion analyzes emotion for a diary and saves the result
+// AnalyzeDiaryEmotion 分析日记情绪（主要接口，推荐使用）
+// 自动使用最佳的分析方法，提供准确的情绪分析结果
 func AnalyzeDiaryEmotion(diaryID string, userID uint, content string, useAI bool, ollamaURL string) (*EmotionAnalysisResult, error) {
+	// 直接使用增强版分析，它包含了所有优化和改进
+	return AnalyzeDiaryEmotionEnhanced(diaryID, userID, content, useAI, ollamaURL)
+}
+
+// AnalyzeDiaryEmotionBasic 基础版情绪分析（仅在需要简单分析时使用）
+func AnalyzeDiaryEmotionBasic(diaryID string, userID uint, content string, useAI bool, ollamaURL string) (*EmotionAnalysisResult, error) {
 	// Check if analysis already exists
 	existing, err := GetEmotionAnalysis(diaryID, userID)
 	if err != nil {
@@ -521,4 +561,489 @@ func AnalyzeDiaryEmotion(diaryID string, userID uint, content string, useAI bool
 	}
 
 	return result, nil
+}
+
+// AnalyzeDiaryEmotionEnhanced 使用增强版分析引擎（推荐使用）
+// 这是主要的情绪分析接口，提供最准确的分析结果
+func AnalyzeDiaryEmotionEnhanced(diaryID string, userID uint, content string, useAI bool, ollamaURL string) (*EmotionAnalysisResult, error) {
+	// 首先尝试使用增强版分析
+	if enhancedResult, err := performEnhancedAnalysis(content, useAI, ollamaURL); err == nil {
+		// 保存分析结果
+		if saveErr := SaveEmotionAnalysis(diaryID, userID, enhancedResult); saveErr != nil {
+			return nil, saveErr
+		}
+		return enhancedResult, nil
+	}
+
+	// 如果增强版失败，回退到基础版本
+	return AnalyzeDiaryEmotion(diaryID, userID, content, useAI, ollamaURL)
+}
+
+// performEnhancedAnalysis 执行增强版情绪分析
+func performEnhancedAnalysis(content string, useAI bool, ollamaURL string) (*EmotionAnalysisResult, error) {
+	// 初始化增强版词典
+	if err := initializeEnhancedDictionary(); err != nil {
+		return nil, err
+	}
+
+	// 执行增强版分析
+	result, err := analyzeWithEnhancedEngine(content)
+	if err != nil {
+		return nil, err
+	}
+
+	// 如果启用AI，进行混合分析
+	if useAI {
+		if aiResult, aiErr := AnalyzeEmotionWithAI(content, ollamaURL); aiErr == nil {
+			result = blendResults(result, aiResult)
+		}
+	}
+
+	return result, nil
+}
+
+// === 增强版情绪分析核心功能 ===
+
+// EnhancedDictionary 增强版情绪词典结构
+type EnhancedDictionary struct {
+	Emotions         map[string]EnhancedCategory `json:"emotions"`
+	ContextModifiers ContextModifiers            `json:"context_modifiers"`
+}
+
+// EnhancedCategory 增强版情绪类别
+type EnhancedCategory struct {
+	Keywords  []string        `json:"keywords"`
+	Intensity IntensityLevels `json:"intensity"`
+}
+
+// IntensityLevels 强度级别
+type IntensityLevels struct {
+	High   []string `json:"high"`
+	Medium []string `json:"medium"`
+	Low    []string `json:"low"`
+}
+
+// ContextModifiers 上下文修饰符
+type ContextModifiers struct {
+	Negation     []string `json:"negation"`
+	Intensifiers []string `json:"intensifiers"`
+	Diminishers  []string `json:"diminishers"`
+}
+
+// KeywordMatch 关键词匹配结果
+type KeywordMatch struct {
+	Keyword   string  `json:"keyword"`
+	Emotion   string  `json:"emotion"`
+	Intensity string  `json:"intensity"`
+	Weight    float64 `json:"weight"`
+	Modified  bool    `json:"modified"`
+	Modifier  string  `json:"modifier"`
+}
+
+var (
+	enhancedDict *EnhancedDictionary
+	regexCache   = make(map[string]*regexp.Regexp)
+
+	// 权重配置
+	intensityWeights = map[string]float64{
+		"high":   1.0,
+		"medium": 0.6,
+		"low":    0.3,
+	}
+
+	modifierWeights = map[string]float64{
+		"negation":    -1.0,
+		"intensifier": 1.5,
+		"diminisher":  0.5,
+	}
+)
+
+// initializeEnhancedDictionary 初始化增强版词典
+func initializeEnhancedDictionary() error {
+	if enhancedDict != nil {
+		return nil // 已经初始化
+	}
+
+	// 尝试加载外部词典文件
+	possiblePaths := []string{
+		"emotion_dictionaries/emotion_keywords.json",
+		"./emotion_keywords.json",
+	}
+
+	for _, path := range possiblePaths {
+		if dict, err := loadEnhancedDictionary(path); err == nil {
+			enhancedDict = dict
+			return nil
+		}
+	}
+
+	// 使用内置词典
+	enhancedDict = buildEnhancedDictionary()
+	return nil
+}
+
+// loadEnhancedDictionary 加载增强版词典文件
+func loadEnhancedDictionary(filepath string) (*EnhancedDictionary, error) {
+	data, err := os.ReadFile(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	dict := &EnhancedDictionary{}
+
+	// 根据文件扩展名选择解析方式
+	if strings.HasSuffix(strings.ToLower(filepath), ".yaml") || strings.HasSuffix(strings.ToLower(filepath), ".yml") {
+		err = yaml.Unmarshal(data, dict)
+	} else {
+		err = json.Unmarshal(data, dict)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return dict, nil
+}
+
+// buildEnhancedDictionary 构建增强版词典（从JSON数据）
+func buildEnhancedDictionary() *EnhancedDictionary {
+	// 确保基础词典已初始化
+	if err := initializeDictionary(); err != nil {
+		// 如果初始化失败，返回基本结构
+		return &EnhancedDictionary{
+			Emotions: make(map[string]EnhancedCategory),
+			ContextModifiers: ContextModifiers{
+				Negation:     []string{"不", "没", "无", "非", "未", "not", "no", "never", "none"},
+				Intensifiers: []string{"非常", "特别", "极其", "超级", "相当", "很", "十分", "extremely", "very", "really", "quite", "so", "too"},
+				Diminishers:  []string{"有点", "稍微", "略", "轻微", "一点", "slightly", "somewhat", "a bit", "a little", "kind of"},
+			},
+		}
+	}
+
+	dict := &EnhancedDictionary{
+		Emotions:         make(map[string]EnhancedCategory),
+		ContextModifiers: dictionaryData.ContextModifiers,
+	}
+
+	// 直接使用JSON文件中的数据
+	for emotion, category := range dictionaryData.Emotions {
+		dict.Emotions[emotion] = EnhancedCategory{
+			Keywords:  category.Keywords,
+			Intensity: category.Intensity,
+		}
+	}
+
+	return dict
+}
+
+// analyzeWithEnhancedEngine 使用增强版引擎分析
+func analyzeWithEnhancedEngine(content string) (*EmotionAnalysisResult, error) {
+	if enhancedDict == nil {
+		return nil, fmt.Errorf("enhanced dictionary not initialized")
+	}
+
+	content = strings.ToLower(content)
+	words := strings.Fields(content)
+	totalWords := len(words)
+
+	if totalWords == 0 {
+		totalWords = 1
+	}
+
+	// 查找关键词匹配
+	matches := findEnhancedMatches(content, words, enhancedDict)
+
+	// 计算情绪分数
+	emotions := map[string]float64{
+		"joy": 0, "sadness": 0, "anger": 0, "fear": 0,
+		"love": 0, "surprise": 0, "disgust": 0,
+	}
+
+	var allKeywords []string
+
+	for _, match := range matches {
+		emotions[match.Emotion] += math.Abs(match.Weight) / float64(totalWords) * 10
+		allKeywords = append(allKeywords, match.Keyword)
+	}
+
+	// 标准化分数
+	for emotion := range emotions {
+		if emotions[emotion] > 1 {
+			emotions[emotion] = 1
+		}
+	}
+
+	// 计算情感分数
+	sentimentScore := calculateSentiment(matches, totalWords)
+	var sentimentLabel string
+	if sentimentScore > 0.1 {
+		sentimentLabel = "positive"
+	} else if sentimentScore < -0.1 {
+		sentimentLabel = "negative"
+	} else {
+		sentimentLabel = "neutral"
+	}
+
+	// 找到主导情绪
+	var dominantEmotion string
+	var maxScore float64
+	for emotion, score := range emotions {
+		if score > maxScore {
+			maxScore = score
+			dominantEmotion = emotion
+		}
+	}
+
+	if dominantEmotion == "" || maxScore < 0.1 {
+		dominantEmotion = "neutral"
+		maxScore = 0.1
+	}
+
+	// 去重关键词
+	allKeywords = removeDuplicatesStr(allKeywords)
+
+	return &EmotionAnalysisResult{
+		Joy:             emotions["joy"],
+		Sadness:         emotions["sadness"],
+		Anger:           emotions["anger"],
+		Fear:            emotions["fear"],
+		Love:            emotions["love"],
+		Surprise:        emotions["surprise"],
+		Disgust:         emotions["disgust"],
+		DominantEmotion: dominantEmotion,
+		Confidence:      maxScore,
+		SentimentScore:  sentimentScore,
+		SentimentLabel:  sentimentLabel,
+		Keywords:        allKeywords,
+		AnalysisMethod:  "enhanced",
+	}, nil
+}
+
+// findEnhancedMatches 查找增强版关键词匹配
+func findEnhancedMatches(content string, words []string, dict *EnhancedDictionary) []KeywordMatch {
+	var matches []KeywordMatch
+
+	// 创建词汇位置索引
+	wordPositions := make(map[string][]int)
+	for i, word := range words {
+		wordPositions[word] = append(wordPositions[word], i)
+	}
+
+	// 查找情绪关键词
+	for emotion, category := range dict.Emotions {
+		// 检查所有关键词
+		for _, keyword := range category.Keywords {
+			keyword = strings.ToLower(keyword)
+			if positions, found := wordPositions[keyword]; found {
+				for _, pos := range positions {
+					// 确定强度级别
+					intensity := getKeywordIntensity(keyword, category)
+
+					match := KeywordMatch{
+						Keyword:   keyword,
+						Emotion:   emotion,
+						Intensity: intensity,
+						Weight:    intensityWeights[intensity],
+						Modified:  false,
+					}
+
+					// 应用上下文修饰符
+					match = applyContextModifiersToMatch(match, words, pos, dict.ContextModifiers)
+					matches = append(matches, match)
+				}
+			}
+		}
+	}
+
+	return matches
+}
+
+// getKeywordIntensity 获取关键词强度级别
+func getKeywordIntensity(keyword string, category EnhancedCategory) string {
+	for _, highKeyword := range category.Intensity.High {
+		if strings.ToLower(highKeyword) == keyword {
+			return "high"
+		}
+	}
+	for _, lowKeyword := range category.Intensity.Low {
+		if strings.ToLower(lowKeyword) == keyword {
+			return "low"
+		}
+	}
+	return "medium"
+}
+
+// applyContextModifiersToMatch 应用上下文修饰符
+func applyContextModifiersToMatch(match KeywordMatch, words []string, position int, modifiers ContextModifiers) KeywordMatch {
+	// 检查否定词
+	if hasModifierNear(words, position, modifiers.Negation, 3) {
+		match.Weight *= modifierWeights["negation"]
+		match.Modified = true
+		match.Modifier = "negation"
+		return match
+	}
+
+	// 检查强化词
+	if hasModifierNear(words, position, modifiers.Intensifiers, 2) {
+		match.Weight *= modifierWeights["intensifier"]
+		match.Modified = true
+		match.Modifier = "intensifier"
+		return match
+	}
+
+	// 检查弱化词
+	if hasModifierNear(words, position, modifiers.Diminishers, 2) {
+		match.Weight *= modifierWeights["diminisher"]
+		match.Modified = true
+		match.Modifier = "diminisher"
+		return match
+	}
+
+	return match
+}
+
+// hasModifierNear 检查附近是否有修饰符
+func hasModifierNear(words []string, position int, modifiers []string, distance int) bool {
+	start := maxInt(0, position-distance)
+	end := minInt(len(words), position+distance+1)
+
+	for i := start; i < end; i++ {
+		if i == position {
+			continue
+		}
+		for _, modifier := range modifiers {
+			if strings.ToLower(words[i]) == strings.ToLower(modifier) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// calculateSentiment 计算情感分数
+func calculateSentiment(matches []KeywordMatch, totalWords int) float64 {
+	positiveScore := 0.0
+	negativeScore := 0.0
+
+	for _, match := range matches {
+		switch match.Emotion {
+		case "joy", "love", "surprise":
+			positiveScore += math.Abs(match.Weight)
+		case "sadness", "anger", "fear", "disgust":
+			negativeScore += math.Abs(match.Weight)
+		}
+	}
+
+	sentimentScore := (positiveScore - negativeScore) / float64(totalWords) * 10
+
+	if sentimentScore > 1 {
+		sentimentScore = 1
+	} else if sentimentScore < -1 {
+		sentimentScore = -1
+	}
+
+	return sentimentScore
+}
+
+// blendResults 混合AI和增强版分析结果
+func blendResults(enhancedResult, aiResult *EmotionAnalysisResult) *EmotionAnalysisResult {
+	// 使用加权平均
+	aiWeight := 0.6
+	enhancedWeight := 0.4
+
+	result := &EmotionAnalysisResult{
+		Joy:            enhancedResult.Joy*enhancedWeight + aiResult.Joy*aiWeight,
+		Sadness:        enhancedResult.Sadness*enhancedWeight + aiResult.Sadness*aiWeight,
+		Anger:          enhancedResult.Anger*enhancedWeight + aiResult.Anger*aiWeight,
+		Fear:           enhancedResult.Fear*enhancedWeight + aiResult.Fear*aiWeight,
+		Love:           enhancedResult.Love*enhancedWeight + aiResult.Love*aiWeight,
+		Surprise:       enhancedResult.Surprise*enhancedWeight + aiResult.Surprise*aiWeight,
+		Disgust:        enhancedResult.Disgust*enhancedWeight + aiResult.Disgust*aiWeight,
+		Confidence:     enhancedResult.Confidence*enhancedWeight + aiResult.Confidence*aiWeight,
+		SentimentScore: enhancedResult.SentimentScore*enhancedWeight + aiResult.SentimentScore*aiWeight,
+		AnalysisMethod: "enhanced+ai",
+	}
+
+	// 重新确定主导情绪
+	emotions := map[string]float64{
+		"joy": result.Joy, "sadness": result.Sadness, "anger": result.Anger,
+		"fear": result.Fear, "love": result.Love, "surprise": result.Surprise, "disgust": result.Disgust,
+	}
+
+	var dominantEmotion string
+	var maxScore float64
+	for emotion, score := range emotions {
+		if score > maxScore {
+			maxScore = score
+			dominantEmotion = emotion
+		}
+	}
+
+	if dominantEmotion == "" || maxScore < 0.1 {
+		dominantEmotion = "neutral"
+	}
+
+	result.DominantEmotion = dominantEmotion
+
+	// 确定情感标签
+	if result.SentimentScore > 0.1 {
+		result.SentimentLabel = "positive"
+	} else if result.SentimentScore < -0.1 {
+		result.SentimentLabel = "negative"
+	} else {
+		result.SentimentLabel = "neutral"
+	}
+
+	// 合并关键词
+	keywordSet := make(map[string]bool)
+	for _, keyword := range enhancedResult.Keywords {
+		keywordSet[keyword] = true
+	}
+	for _, keyword := range aiResult.Keywords {
+		keywordSet[keyword] = true
+	}
+
+	var combinedKeywords []string
+	for keyword := range keywordSet {
+		combinedKeywords = append(combinedKeywords, keyword)
+	}
+	result.Keywords = combinedKeywords
+
+	return result
+}
+
+// 辅助函数
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func removeDuplicatesStr(slice []string) []string {
+	keys := make(map[string]bool)
+	var result []string
+
+	for _, item := range slice {
+		if !keys[item] {
+			keys[item] = true
+			result = append(result, item)
+		}
+	}
+
+	return result
 }

@@ -4,7 +4,7 @@ import {
   GetUserEmotionTrends, 
   GetUserEmotionStatistics, 
   AnalyzeAllDiariesEmotion 
-} from '../wailsjs/go/main/App'
+} from '../../wailsjs/go/main/App'
 import {
   Chart as ChartJS,
   CategoryScale,

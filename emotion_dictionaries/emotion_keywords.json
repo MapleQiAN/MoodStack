@@ -1,0 +1,138 @@
+{
+  "emotions": {
+    "joy": {
+      "keywords": [
+        "开心", "快乐", "高兴", "愉悦", "兴奋", "满足", "幸福", "欣喜", "喜悦", "舒心",
+        "畅快", "欢乐", "惊喜", "满意", "放松", "轻松", "安心", "温暖", "甜蜜", "美好",
+        "棒", "太好了", "成功", "胜利", "完美", "优秀", "精彩", "赞", "给力", "爽",
+        "舒服", "舒适", "惬意", "享受", "美妙", "绝妙", "神奇", "奇妙", "赞美", "称赞",
+        "表扬", "夸奖", "鼓励", "支持", "认可", "肯定", "赞同", "同意", "好评", "点赞",
+        "wonderful", "amazing", "fantastic", "great", "excellent", "awesome", "brilliant",
+        "marvelous", "superb", "outstanding", "fabulous", "terrific", "delightful", "cheerful",
+        "joyful", "happy", "glad", "pleased", "satisfied", "content", "elated", "euphoric"
+      ],
+      "intensity": {
+        "high": ["狂欢", "狂喜", "欣喜若狂", "兴高采烈", "心花怒放", "手舞足蹈", "欢天喜地", "euphoric", "ecstatic", "overjoyed"],
+        "medium": ["开心", "快乐", "高兴", "愉悦", "满足", "happy", "glad", "pleased", "cheerful"],
+        "low": ["还行", "不错", "可以", "okay", "fine", "decent"]
+      }
+    },
+    "sadness": {
+      "keywords": [
+        "难过", "伤心", "悲伤", "痛苦", "沮丧", "失落", "郁闷", "忧郁", "抑郁", "孤独",
+        "寂寞", "空虚", "无助", "绝望", "心酸", "心痛", "眼泪", "哭", "流泪", "想哭",
+        "失望", "失落", "遗憾", "可惜", "不幸", "糟糕", "悲惨", "凄惨", "悲哀", "哀伤",
+        "哀愁", "忧愁", "忧伤", "忧虑", "担忧", "焦虑", "烦恼", "苦恼", "苦闷", "苦涩",
+        "痛苦不堪", "痛不欲生", "心如刀割", "肝肠寸断", "撕心裂肺", "欲哭无泪", "泪如雨下",
+        "terrible", "awful", "sad", "depressed", "miserable", "heartbroken", "devastated",
+        "melancholy", "gloomy", "sorrowful", "mournful", "grieving", "dejected", "downcast"
+      ],
+      "intensity": {
+        "high": ["痛不欲生", "绝望", "崩溃", "心如死灰", "万念俱灰", "devastated", "heartbroken", "crushed"],
+        "medium": ["难过", "伤心", "悲伤", "失落", "sad", "upset", "down", "blue"],
+        "low": ["有点难过", "不太开心", "略感失落", "a bit sad", "somewhat down"]
+      }
+    },
+    "anger": {
+      "keywords": [
+        "愤怒", "生气", "恼火", "烦躁", "暴躁", "愤恨", "憎恨", "讨厌", "厌恶", "反感",
+        "不爽", "火大", "气死", "烦死", "讨厌死", "恨", "愤慨", "激愤", "不满", "抱怨",
+        "该死", "混蛋", "白痴", "蠢", "垃圾", "操", "妈的", "靠", "去死", "滚",
+        "气愤", "恼怒", "怒火", "怒气", "火冒三丈", "怒不可遏", "勃然大怒", "暴跳如雷",
+        "咬牙切齿", "义愤填膺", "怒发冲冠", "七窍生烟", "怒火中烧", "雷霆之怒",
+        "angry", "hate", "furious", "mad", "pissed", "annoyed", "irritated", "frustrated",
+        "outraged", "enraged", "livid", "irate", "incensed", "infuriated", "seething"
+      ],
+      "intensity": {
+        "high": ["暴怒", "狂怒", "怒不可遏", "火冒三丈", "furious", "enraged", "livid", "seething"],
+        "medium": ["愤怒", "生气", "恼火", "angry", "mad", "pissed", "irritated"],
+        "low": ["有点生气", "不太爽", "略感不满", "annoyed", "mildly irritated"]
+      }
+    },
+    "fear": {
+      "keywords": [
+        "害怕", "恐惧", "担心", "紧张", "焦虑", "不安", "慌张", "恐慌", "惊慌", "胆怯",
+        "畏惧", "忧虑", "忐忑", "心慌", "紧张兮兮", "提心吊胆", "惶恐", "惊恐", "战栗",
+        "颤抖", "吓", "怕", "可怕", "恐怖", "吓死", "惊吓", "震惊", "骇人", "毛骨悚然",
+        "心惊胆战", "胆战心惊", "诚惶诚恐", "惊弓之鸟", "草木皆兵", "如履薄冰", "战战兢兢",
+        "scared", "afraid", "terrified", "frightened", "nervous", "anxious", "worried",
+        "panicked", "horrified", "petrified", "alarmed", "startled", "apprehensive"
+      ],
+      "intensity": {
+        "high": ["恐惧", "恐慌", "惊恐", "毛骨悚然", "terrified", "horrified", "petrified"],
+        "medium": ["害怕", "担心", "紧张", "scared", "afraid", "nervous", "worried"],
+        "low": ["有点担心", "略感紧张", "a bit worried", "somewhat nervous"]
+      }
+    },
+    "love": {
+      "keywords": [
+        "爱", "喜欢", "爱情", "恋爱", "暗恋", "表白", "约会", "亲", "吻", "拥抱",
+        "想念", "思念", "牵挂", "在乎", "关心", "温柔", "甜蜜", "浪漫", "心动", "迷恋",
+        "深爱", "热爱", "钟爱", "疼爱", "宠爱", "爱意", "情意", "情深", "深情", "真情",
+        "痴情", "深情款款", "情投意合", "心心相印", "两情相悦", "如胶似漆", "形影不离",
+        "love", "romantic", "crush", "adore", "cherish", "treasure", "affection", "devotion",
+        "passion", "romance", "intimate", "tender", "caring", "loving", "beloved"
+      ],
+      "intensity": {
+        "high": ["深爱", "痴情", "爱得死去活来", "love deeply", "adore", "worship"],
+        "medium": ["爱", "喜欢", "爱情", "love", "like", "romantic", "affection"],
+        "low": ["有点喜欢", "还行", "不错", "kind of like", "somewhat fond of"]
+      }
+    },
+    "surprise": {
+      "keywords": [
+        "惊讶", "震惊", "吃惊", "惊奇", "意外", "出乎意料", "想不到", "没想到", "突然",
+        "忽然", "竟然", "居然", "原来", "天哪", "我的天", "不会吧", "真的吗", "哇",
+        "哎呀", "咦", "诶", "嘿", "呀", "惊人", "令人惊讶", "不可思议", "匪夷所思",
+        "出人意料", "始料未及", "措手不及", "猝不及防", "大吃一惊", "目瞪口呆",
+        "amazing", "surprising", "unexpected", "wow", "omg", "unbelievable", "incredible",
+        "astonishing", "astounding", "shocking", "stunning", "remarkable", "extraordinary"
+      ],
+      "intensity": {
+        "high": ["震惊", "大吃一惊", "目瞪口呆", "shocking", "astounding", "mind-blowing"],
+        "medium": ["惊讶", "吃惊", "意外", "surprised", "unexpected", "amazing"],
+        "low": ["有点意外", "略感惊讶", "a bit surprised", "somewhat unexpected"]
+      }
+    },
+    "disgust": {
+      "keywords": [
+        "恶心", "讨厌", "厌恶", "反感", "嫌弃", "恶劣", "肮脏", "龌龊", "污秽", "臭",
+        "难闻", "难看", "丑", "恶心死", "受不了", "无法忍受", "厌烦", "烦人", "讨人厌",
+        "令人作呕", "恶心巴拉", "倒胃口", "反胃", "想吐", "呕心", "作呕", "恶臭",
+        "臭不可闻", "臭气熏天", "污浊", "邋遢", "脏兮兮", "不堪入目", "惨不忍睹",
+        "gross", "disgusting", "yuck", "nasty", "revolting", "repulsive", "sickening",
+        "nauseating", "vile", "foul", "loathsome", "abhorrent", "repugnant", "offensive"
+      ],
+      "intensity": {
+        "high": ["恶心死了", "令人作呕", "惨不忍睹", "revolting", "nauseating", "sickening"],
+        "medium": ["恶心", "讨厌", "厌恶", "gross", "disgusting", "nasty"],
+        "low": ["有点讨厌", "不太喜欢", "a bit gross", "somewhat unpleasant"]
+      }
+    }
+  },
+  "sentiment": {
+    "positive": {
+      "keywords": [
+        "好", "棒", "优秀", "完美", "成功", "胜利", "满意", "开心", "快乐", "幸福",
+        "美好", "温暖", "甜蜜", "感谢", "赞", "喜欢", "爱", "支持", "鼓励", "肯定",
+        "认可", "表扬", "夸奖", "称赞", "赞美", "点赞", "给力", "厉害", "牛", "强",
+        "positive", "great", "good", "excellent", "awesome", "wonderful", "amazing",
+        "perfect", "fantastic", "brilliant", "outstanding", "superb", "marvelous"
+      ]
+    },
+    "negative": {
+      "keywords": [
+        "坏", "糟", "失败", "错误", "问题", "困难", "麻烦", "痛苦", "难过", "伤心",
+        "失望", "讨厌", "恨", "愤怒", "害怕", "担心", "焦虑", "压力", "烦恼", "苦闷",
+        "不行", "不好", "差", "烂", "垃圾", "废物", "无用", "没用", "糟糕透了",
+        "negative", "bad", "terrible", "awful", "horrible", "wrong", "failed", "problem",
+        "disaster", "nightmare", "catastrophe", "crisis", "trouble", "difficulty"
+      ]
+    }
+  },
+  "context_modifiers": {
+    "negation": ["不", "没", "无", "非", "未", "勿", "别", "not", "no", "never", "none"],
+    "intensifiers": ["非常", "特别", "极其", "超级", "相当", "很", "十分", "万分", "extremely", "very", "really", "quite", "so", "too"],
+    "diminishers": ["有点", "稍微", "略", "轻微", "一点", "一些", "slightly", "somewhat", "a bit", "a little", "kind of"]
+  }
+}
