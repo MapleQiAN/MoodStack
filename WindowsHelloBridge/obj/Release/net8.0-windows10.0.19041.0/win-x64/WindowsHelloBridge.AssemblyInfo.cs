@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WindowsHelloBridge")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1fc0bb1987b03fa6af71a97d52af55576627175e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+84ee9fa4e061292d36493fc5cb2cc803b1fd13b1")]
 [assembly: System.Reflection.AssemblyProductAttribute("WindowsHelloBridge")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WindowsHelloBridge")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
