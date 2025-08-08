@@ -12,6 +12,34 @@
       </div>
 
       <div class="settings-content">
+        <!-- 账户信息 -->
+        <section class="settings-section">
+          <h3 class="section-title">账户信息</h3>
+          
+          <div class="setting-item account-info">
+            <div class="setting-info">
+              <div class="setting-label">当前用户</div>
+              <div class="setting-description">
+                {{ currentUser?.username || '未知用户' }}
+              </div>
+            </div>
+            <div class="setting-control">
+              <button
+                class="setting-btn danger"
+                @click="handleLogout"
+                title="登出"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16,17 21,12 16,7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                登出
+              </button>
+            </div>
+          </div>
+        </section>
+
         <!-- 安全设置 -->
         <section class="settings-section">
           <h3 class="section-title">安全设置</h3>
@@ -232,7 +260,8 @@ import {
   DisableBiometric,
   CheckMigrationStatus,
   MigrateData,
-  GetCurrentUser
+  GetCurrentUser,
+  Logout
 } from '../../wailsjs/go/main/App'
 
 const props = defineProps({
@@ -242,7 +271,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'userUpdated'])
+const emit = defineEmits(['close', 'userUpdated', 'logout'])
 
 const loading = ref(false)
 const biometricLoading = ref(false)
@@ -346,6 +375,12 @@ const handleChangePassword = async () => {
   } finally {
     passwordLoading.value = false
   }
+}
+
+const handleLogout = () => {
+  // 交由父组件处理实际登出逻辑与界面切换
+  emit('logout')
+  emit('close')
 }
 
 const handleMigration = async () => {
@@ -571,6 +606,23 @@ onMounted(async () => {
   background: var(--warning-primary-hover);
 }
 
+.setting-btn.danger {
+  background: var(--accent-error);
+  color: white;
+}
+
+.setting-btn.danger:hover:not(:disabled) {
+  background: var(--accent-error-hover);
+}
+
+.setting-btn.danger:focus:not(:disabled),
+.setting-btn.danger:focus-visible:not(:disabled) {
+  background: var(--accent-error-focus);
+  outline: 2px solid var(--accent-error);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--accent-error-alpha);
+}
+
 .setting-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -580,6 +632,17 @@ onMounted(async () => {
   font-size: 13px;
   color: var(--text-disabled);
   padding: 8px 0;
+}
+
+.account-info .setting-label {
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.account-info .setting-description {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 .modal-overlay {

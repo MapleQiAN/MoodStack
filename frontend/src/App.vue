@@ -377,13 +377,6 @@ const handleUserUpdated = async (updatedUser = null) => {
     <div class="titlebar">
       <div class="titlebar-content" :class="{ 'no-search': !isAuthenticated }">
         <div class="app-info">
-          <button v-if="isAuthenticated" class="sidebar-toggle" @click="toggleSidebar" title="切换侧边栏">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <line x1="3" y1="12" x2="21" y2="12"/>
-              <line x1="3" y1="18" x2="21" y2="18"/>
-            </svg>
-          </button>
           <h1 class="app-title">MoodStack</h1>
           <span class="app-subtitle">心栈</span>
         </div>
@@ -479,24 +472,6 @@ const handleUserUpdated = async (updatedUser = null) => {
         </div>
 
         <div class="titlebar-actions">
-          <!-- 用户信息 -->
-          <div v-if="isAuthenticated && currentUser" class="user-info">
-            <span class="username">{{ currentUser.username }}</span>
-            <button class="user-btn" @click="showSettingsDialog = true" title="设置">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M12 1v6m0 6v6m6-12h-6m-6 0h6m-3-5.2a9 9 0 1 0 0 10.4m0-10.4a9 9 0 1 1 0 10.4"/>
-              </svg>
-            </button>
-            <button class="user-btn logout-btn" @click="handleLogout" title="登出">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16,17 21,12 16,7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </button>
-          </div>
-          
           <button class="theme-toggle" @click="toggleTheme" title="切换主题">
             <svg v-if="!isDarkMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="5"/>
@@ -511,6 +486,14 @@ const handleUserUpdated = async (updatedUser = null) => {
             </svg>
             <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
+          
+          <button v-if="isAuthenticated" class="settings-toggle" @click="showSettingsDialog = true" title="设置">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
+              <path d="M2 17L12 22L22 17"/>
+              <path d="M2 12L12 17L22 12"/>
             </svg>
           </button>
         </div>
@@ -557,6 +540,7 @@ const handleUserUpdated = async (updatedUser = null) => {
       :visible="showSettingsDialog"
       @close="showSettingsDialog = false"
       @userUpdated="handleUserUpdated"
+      @logout="handleLogout"
     />
 
     <!-- 主布局 -->
@@ -596,13 +580,21 @@ const handleUserUpdated = async (updatedUser = null) => {
           </button>
         </nav>
         
-        <div class="sidebar-footer" v-show="!sidebarCollapsed">
-          <div class="stats">
+        <div class="sidebar-footer">
+          <!-- 统计信息 -->
+          <div class="stats" v-show="!sidebarCollapsed">
             <div class="stat-item">
               <span class="stat-label">记录总数</span>
               <span class="stat-value">{{ diaries.length }}</span>
             </div>
           </div>
+          
+          <!-- 侧边栏收起按钮 -->
+          <button class="sidebar-toggle-btn" @click="toggleSidebar" :title="sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ 'rotated': sidebarCollapsed }">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </button>
         </div>
       </aside>
 
@@ -977,7 +969,7 @@ kbd {
   -webkit-app-region: drag;
 }
 
-.sidebar-toggle, .theme-toggle {
+.settings-toggle, .theme-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -992,12 +984,12 @@ kbd {
   -webkit-app-region: no-drag;
 }
 
-.sidebar-toggle svg, .theme-toggle svg {
+.settings-toggle svg, .theme-toggle svg {
   display: block;
   flex-shrink: 0;
 }
 
-.sidebar-toggle:hover, .theme-toggle:hover {
+.settings-toggle:hover, .theme-toggle:hover {
   background: var(--bg-tertiary);
   color: var(--text-primary);
 }
@@ -1005,49 +997,11 @@ kbd {
 .titlebar-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   -webkit-app-region: no-drag;
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 6px 12px;
-}
 
-.username {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.user-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.user-btn:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-}
-
-.user-btn.logout-btn:hover {
-  background: var(--bg-tertiary);
-  color: var(--accent-error);
-}
 
 .app-title {
   font-family: var(--font-display);
@@ -1205,6 +1159,9 @@ kbd {
 
 .sidebar-footer {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .stats {
@@ -1212,6 +1169,43 @@ kbd {
   border-radius: var(--radius-md);
   padding: 16px;
   border: 1px solid var(--bg-tertiary);
+}
+
+.sidebar-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+  border: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.sidebar-toggle-btn svg {
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.sidebar-toggle-btn svg.rotated {
+  transform: rotate(180deg);
+}
+
+.sidebar.collapsed .sidebar-toggle-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
 }
 
 .stat-item {

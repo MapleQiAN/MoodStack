@@ -45,6 +45,15 @@
   --accent-info: var(--nord10);
   /* 主色在 hover/focus 时使用更深但同色系的蓝色（基于 #88c0d0 深化） */
   --accent-primary-hover: #5aa5b9;
+  /* 错误色的 hover/focus 与透明态 */
+  --accent-error-hover: #a84f57;   /* 深一阶红 */
+  --accent-error-focus: #9a454d;   /* 再深一阶用于 focus */
+  --accent-error-alpha: rgba(191, 97, 106, 0.2);
+  /* 统一错误语义变量，供组件内 message 使用 */
+  --error-primary: var(--accent-error);
+  --error-alpha: var(--accent-error-alpha);
+  /* 警告色 hover（与组件内引用保持一致） */
+  --warning-primary-hover: #d4b56f;
   
   /* Alpha variants */
   --accent-primary-alpha: rgba(136, 192, 208, 0.2);
@@ -350,6 +359,14 @@ textarea:focus-visible {
   --accent-info: #5e81ac;
   /* 夜间模式下保持同色系更深蓝 */
   --accent-primary-hover: #5aa5b9;
+  /* 夜间模式的错误色 hover/focus 与透明态 */
+  --accent-error-hover: #a84f57;
+  --accent-error-focus: #8e3f46;
+  --accent-error-alpha: rgba(191, 97, 106, 0.35);
+  --error-primary: var(--accent-error);
+  --error-alpha: var(--accent-error-alpha);
+  /* 警告色 hover - 夜间模式复用同色系更深黄 */
+  --warning-primary-hover: #d4b56f;
   
   /* Alpha variants - dark mode */
   --accent-primary-alpha: rgba(136, 192, 208, 0.3);
