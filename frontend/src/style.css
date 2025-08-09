@@ -111,6 +111,13 @@ body {
   font-weight: 400;
 }
 
+/* Prevent whole-page panning/scrolling and overscroll bounce */
+html, body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none; /* disable touch panning/zoom */
+}
+
 @font-face {
     font-family: "Nunito";
     font-style: normal;
