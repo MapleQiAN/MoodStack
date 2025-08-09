@@ -77,6 +77,21 @@
               +{{ day.diaries.length - 3 }}
             </div>
           </div>
+
+          <!-- 悬浮预览：前三篇标题与时间 -->
+          <div v-if="day.diaries.length > 0" class="day-hover-preview">
+            <div
+              v-for="diary in day.diaries.slice(0, 3)"
+              :key="diary.id"
+              class="preview-item"
+            >
+              <span class="preview-time">{{ formatTime(diary.createdAt) }}</span>
+              <span class="preview-title">{{ diary.title || '无标题' }}</span>
+            </div>
+            <div v-if="day.diaries.length > 3" class="preview-more">
+              还有 {{ day.diaries.length - 3 }} 篇...
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -573,6 +588,65 @@ onMounted(() => {
   background: var(--bg-tertiary);
   padding: 2px 4px;
   border-radius: var(--radius-sm);
+}
+
+/* 悬浮预览 Tooltip */
+.day-hover-preview {
+  position: absolute;
+  left: -4px;
+  right: auto;
+  top: 32px;
+  min-width: 240px;
+  max-width: 320px;
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 12px;
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+.day-cell:hover .day-hover-preview {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.preview-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.preview-item:last-child {
+  margin-bottom: 0;
+}
+
+.preview-time {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.preview-title {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  flex: 1;
+}
+
+.preview-more {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 /* 选中日期的日记列表 */
